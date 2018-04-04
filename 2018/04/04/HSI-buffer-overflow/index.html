@@ -5,15 +5,20 @@
   
 
   
-  <title>小白拜拜拜</title>
+  <title>HSI buffer overflow | 小白拜拜拜</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="小白拜拜拜">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="HSI: buffer overflow这是华盛顿大学hardware/software interface这门课的缓冲溢出攻击实验，并不复杂并且非常有意思。 Instrcution实验中的文件主要有以下五个：    File description     makecookie Generates a “cookie” based on something   bufbomb The execu">
+<meta name="keywords" content="HSI">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HSI buffer overflow">
+<meta property="og:url" content="http://yoursite.com/2018/04/04/HSI-buffer-overflow/index.html">
 <meta property="og:site_name" content="小白拜拜拜">
+<meta property="og:description" content="HSI: buffer overflow这是华盛顿大学hardware/software interface这门课的缓冲溢出攻击实验，并不复杂并且非常有意思。 Instrcution实验中的文件主要有以下五个：    File description     makecookie Generates a “cookie” based on something   bufbomb The execu">
 <meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-04-04T14:28:35.660Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="小白拜拜拜">
+<meta name="twitter:title" content="HSI buffer overflow">
+<meta name="twitter:description" content="HSI: buffer overflow这是华盛顿大学hardware/software interface这门课的缓冲溢出攻击实验，并不复杂并且非常有意思。 Instrcution实验中的文件主要有以下五个：    File description     makecookie Generates a “cookie” based on something   bufbomb The execu">
   
     <link rel="alternate" href="/atom.xml" title="小白拜拜拜" type="application/atom+xml">
   
@@ -60,9 +65,7 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-HSI-buffer-overflow" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-HSI-buffer-overflow" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/04/04/HSI-buffer-overflow/" class="article-date">
   <time datetime="2018-04-04T14:26:29.000Z" itemprop="datePublished">2018-04-04</time>
@@ -75,8 +78,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/04/04/HSI-buffer-overflow/">HSI buffer overflow</a>
+    <h1 class="article-title" itemprop="name">
+      HSI buffer overflow
     </h1>
   
 
@@ -185,176 +188,19 @@
     </footer>
   </div>
   
-</article>
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-LLVM学习（1）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/03/30/LLVM学习（1）/" class="article-date">
-  <time datetime="2018-03-30T02:06:15.000Z" itemprop="datePublished">2018-03-30</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/03/30/LLVM学习（1）/">LLVM学习（1）</a>
-    </h1>
+    <a href="/2018/03/30/LLVM学习（1）/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Älter</strong>
+      <div class="article-nav-title">LLVM学习（1）</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>实验室可能要接一个对线程伪共享进行检测和优化的项目，其中一些方法要基于LLVM这个框架实现，所以自己开始研究LLVM。</p>
-<p>LLVM（low level virtual machine）是一个编译器框架，最早是Illinois的一个研究项目，它的主要作用是可以作为多种语言的后端，它可以提供与可编程语言无关的优化和针对很多种CPU的代码生成功能，llvm目前也不仅仅是一个框架，它还包含了很多子项目，比如clang。LLVM的优点是开源，同时他有一个表达形式很好的IR语言。</p>
-<p>我的操作系统是cento OS，官方是使用svn进行版本控制的，可以通过SVN获取源码，安装过程中要用到cmake命令，并且要求cmake版本在3.4以上，直接使用<code>yum install cmake</code>命令安装的版本是不满足要求的。</p>
-<p>libc++是针对Clang开发的C++标准库，包含了对C++11的完整支持，其与clang的关系就行libstdc++与GCC的关系。</p>
-<h2 id="下载源码"><a href="#下载源码" class="headerlink" title="下载源码"></a>下载源码</h2><p>下载步骤如下，要注意目录结构：</p>
-<pre><code>#下载llvm
-mdkir LC
-cd LC
-svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm
-#下载clang
-cd llvm/tools
-svn co http://llvm.org/svn/llvm-project/cfe/trunk clang
-#下载Compiler-RT
-cd llvm/project
-svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk compiler-rt
-#下载标准库libcxx和libcxxabi
-svn co http://llvm.org/svn/llvm-project/libcxx/trunk libcxx
-svn co http://llvm.org/svn/llvm-project/libcxxabi/trunk libcxxabi
-</code></pre><h2 id="编译安装"><a href="#编译安装" class="headerlink" title="编译安装"></a>编译安装</h2><p>LLVM进制源码内编译（in-tree build is not supposed）， 因此我们需要在源码目录外新建目录来存放编译后的文件。新建build目录并进入目录，使用cmake得到Makefile文件，然后使用make进行编译，<strong>-G “Unix Makefiles”</strong> 表示要使用cmake工具得到Unix安装环境下的Makefile。LLVM支持并行编译，make -j2代表着同时在两个核上进行并行编译，最后使用make install进行安装。</p>
-<pre><code>cd..
-mkdir build
-cd build
-cmake -G &quot;Unix Makefiles&quot; -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=&quot;X86&quot; ../llvm
-make -j2
-sudo make install
-</code></pre><h2 id="C-internal-compiler-error-Killed-program-cc1plus-错误解决方法"><a href="#C-internal-compiler-error-Killed-program-cc1plus-错误解决方法" class="headerlink" title="C++: internal compiler error: Killed(program cc1plus)错误解决方法"></a>C++: internal compiler error: Killed(program cc1plus)错误解决方法</h2><p>如果编译的机器内存较小，可能会出现上述错误，这时可以通过创建交换空间来解决，Linux将随机存储RAM称为内存页。交换技术就是将一页内存复制到预先设定的硬盘上的交换空间，从而释放内存。物理内存和交换空间的和就是可提供的虚拟空间的总量。</p>
-<p>当系统需要的内存量比物理内存更大时，系统内核可以把较少使用的内存页写到交换空间，把空闲出来的内存给当前应用程序（进程）使用。一个应用启动时使用的内存页可能只有启动时会用到，操作系统可以把这部分内存页写入交换空间。</p>
-<p>但是交换空间技术也有负面因素，因为相对于内存磁盘读写的速度很慢，内存读写速度为纳秒级，但是硬盘速度为毫秒级。所以发生的交换越多，系统运行的速度就越慢。</p>
-<p>Linux有两种形式的交换空间：交换分区和交换文件。交换分区是一个独立的硬盘，没有文件等内容。交换文件是文件系统中的特殊文件，独立于系统和数据文件之外。 可以使用<code>swapon -s</code>来查看swap空间。</p>
-<p>针对本文中的问题,可以通过下面方式解决：</p>
-<pre><code>#创建空文件，if输入 of输出 bs块大小 count总大小
-dd if=/dev/zero of=/swapfile bs=1024 count=1024000
-#swapfile是交换文件的名字，准备交换文件使用mkswap命令
-mkswap /swapfile是交换文件的名字
-#挂载文件
-swapon /swapfile
-</code></pre><p>可以通过<code>free -m</code>查看是否生效，通过下图可以看到交换文件创建成功。</p>
-<p><img src="/images/free-m.png" alt=""></p>
-<p>创建完毕后可以重新<code>make</code>一下，应该可以顺利完成了。之后可以将交换文件删除，删除的命令如下：</p>
-<pre><code>#首先停止swap分区
-swapoff /swapfile是交换文件的名字
-#删除swap分区文件
-rm -rf /swapfile
-</code></pre><p>最后可以通过<code>clang --version</code>和<code>llvm-config --version</code>查看LLVM和clang是否安装成功。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjfl6tzb60003l6qwu0gyepbv" class="article-share-link">Teilen</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
-
-    </footer>
-  </div>
   
 </article>
-
-
-  
-    <article id="post-P、NP、NP-hard、NPC问题" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/03/13/P、NP、NP-hard、NPC问题/" class="article-date">
-  <time datetime="2018-03-12T16:27:24.000Z" itemprop="datePublished">2018-03-13</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/03/13/P、NP、NP-hard、NPC问题/">P、NP、NP-hard、NPC问题</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="P问题："><a href="#P问题：" class="headerlink" title="P问题："></a>P问题：</h4><p>一个问题可以在多项式的时间得到解决。P为英文<code>polynominal</code>的首字母。多项式时间的时间复杂度例如<code>O(n)</code>、<code>O(n^2)</code>等等。</p>
-<h4 id="NP问题："><a href="#NP问题：" class="headerlink" title="NP问题："></a>NP问题：</h4><p>NP问题可能没有一个已知的快速解决方案。但如果能够在多项式的时间内验证一个解是否正确，则称此问题为NP问题。例如根据数据画好了一个图。求解能否找到权重和小于100的生成树。这个问题可以在多项式的时间内得到验证。假设你运气好，随手一画就得到了小于100的生成树，验证的方法只需要将生成树的所有树边权重相加。时间复杂度为<code>O(V)</code>。V代表树的结点树，生成树的边数为<code>|V|-1</code>。</p>
-<h4 id="NPC问题"><a href="#NPC问题" class="headerlink" title="NPC问题"></a>NPC问题</h4><p>提到NPC问题之前需要了解的概念是规约。例如一个问题A可以约化为问题B的含义是，可以用问题B的解法来解决问题A。或者说A可以转化为B。例如求一元一次方程可以规约到求一元二次方程。将一元二次方程的二次项系数变为0。这样两个问题就等价了。通过实例也可看出问题B不比问题A简单，即问题B的时间复杂度高于或者等于A。规约是具有传递性的。A规约成B，B规约成C，则A能够规约成C。</p>
-<p>通过不断地规约，我们能得到复杂度更高但是应用范围更广的算法来代替复杂度虽低但是应用范围小的一类问题的算法。根据传递性，最终可以得到一个复杂度最高，并且可以解决所有NP问题的NP问题。这就是NPC问题，即NP完全问题。NPC不止一个，而是一系列问题。</p>
-<h4 id="证明一个问题是NPC问题的步骤："><a href="#证明一个问题是NPC问题的步骤：" class="headerlink" title="证明一个问题是NPC问题的步骤："></a>证明一个问题是NPC问题的步骤：</h4><p>1.首先要证明此问题是一个NP问题。2.证明一个已知的NPC问题能够规约到此问题。已知的NPC问题，给定一个逻辑电路，是否存在一种输入使得输出为<code>True</code>。所有的NP问题都可以规约到逻辑电路问题。直观地解释是计算机中所有的程序最终都转化成01组成的机器语言执行。</p>
-<p>另外一个比较神奇的问题是，因为NPC问题是NP问题不断规约而来的，所以如果能证明一个NPC问题可以在多项式时间内解决。那么所有的NP问题都能在多项式时间内解决。即<code>NP=P</code>。遗憾的是此题目前无解。</p>
-<h4 id="NP-hard问题："><a href="#NP-hard问题：" class="headerlink" title="NP-hard问题："></a>NP-hard问题：</h4><p>NP-hard问题满足NPC问题定义中的第二条。但是不一定满足第一条。即NP-hard的范围比NPC范围更广。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjfl6tzba0004l6qwiaprwqta" class="article-share-link">Teilen</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-HelloWorld" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/03/13/HelloWorld/" class="article-date">
-  <time datetime="2018-03-12T16:15:00.000Z" itemprop="datePublished">2018-03-13</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/03/13/HelloWorld/">HelloWorld</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>终于搭好了自己的博客，其实过程很简单，没有我想象的复杂。今天是3月十三号，希望在接下来的半年时间里多学习、多记录、多总结，为找工作做好充足的准备。</p>
-<p>接下来两周时间主要用来完成小论文，希望能把这件事早点了结。前段时间看到了华盛顿大学的hardware/software interface这门课，大概看了一些之后觉得非常有意思，这门课的参考书是大名鼎鼎的《深入理解计算机系统》，自己可能没时间完全拜读了，所以希望能够认真看完这门课程，同时也能练练英语听力，这门课程主要讲了一些偏底层的东西，比如汇编语言、寄存器、内存的结构、指针、缓存等等，课程最吸引我的就是几个实验了，我给自己定下的目标是两周内完成这门课的学习，并且把这些实验记录下来。</p>
-<p>再接下去的时间准备看一下萧井陌大神在b站的写代码视频，之前看过一点，感觉还是很不错的，里面有一些思想我觉得还是很好的，比如说二维数组中最后一行的末尾也要添加逗号，因为这样再添加新的一行的时候就不需要对之前的最后一行进行操作，人类的发展过程就是使人们的生活越来越便捷，写代码也应该使这样的。</p>
-<p>之后要学习一些c/c++的网络编程，最终还是决定找c/c++方面的工作，然而自己所了解的东西还是十分有限，希望自己能看一些开源项目，然后找到合适的东西自己实践一下，丰富自己的经验，而网络方面也是自己比较薄弱的环节。还是先完成眼下的计划再进行安排。相信我的结局一定是美好的，加油！</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjfl6tzat0001l6qwoj77ttm9" class="article-share-link">Teilen</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-
 
 </section>
         
