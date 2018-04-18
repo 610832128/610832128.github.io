@@ -62,6 +62,66 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-面试复习" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/18/面试复习/" class="article-date">
+  <time datetime="2018-04-18T03:40:05.000Z" itemprop="datePublished">2018-04-18</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/04/18/面试复习/">面试复习（1）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h6 id="1-指针数组和数组指针-读法与顺序相反"><a href="#1-指针数组和数组指针-读法与顺序相反" class="headerlink" title="1.指针数组和数组指针(读法与顺序相反)"></a>1.指针数组和数组指针(读法与顺序相反)</h6><p>int (*p) [n]; 数组指针，首先是一个指针然后这个指针指向整型数组。<br><br>int *p[n]; []优先级更高，首先是一个数组，int* 说明了这个数组的元素是int指针。</p>
+<h6 id="2-常量指针和指针常量-读法与顺序相同"><a href="#2-常量指针和指针常量-读法与顺序相同" class="headerlink" title="2.常量指针和指针常量(读法与顺序相同)"></a>2.常量指针和指针常量(读法与顺序相同)</h6><p>int const* p; 常量指针，首先是一个指针这个指针指向常量。<br><br>int * const p; 指针常量，首先是一个常量，并且用指针修饰，指针不能更改。</p>
+<h6 id="3-字符串转换为整数"><a href="#3-字符串转换为整数" class="headerlink" title="3.字符串转换为整数"></a>3.字符串转换为整数</h6><p>输入的指针不能为空，对正负值进行判断，对输入的字符进行判断是否包含非数值字符，以及溢出处理。除了完成基本的功能外，还会关注是否考虑了边界条件、特殊输入(Null指针，空字符串等)以及错误处理。</p>
+<h6 id="4-sizeof-Class"><a href="#4-sizeof-Class" class="headerlink" title="4.sizeof(Class)"></a>4.sizeof(Class)</h6><p>定义空类型，里面没有任何成员变量和成员函数，对该类似求sizeof()，得到的结果是1。空类型的实例不包含任何信息，本来应该是0，但是当声明该类型的实例时，必须在内存中占有一定的空间，否则无法使用。具体由编译器决定。加上构造和析构函数也是一样，只需要知道函数的地址即可。函数的地址只与类型有关而与实例无关。如果把析构函数标记为虚函数，会为该类型生成虚函数表，并在该类型的每一个实例中添加一个指向虚函数表的指针，32位上4个字节，64位上8个字节。</p>
+<h6 id="5-拷贝构造函数"><a href="#5-拷贝构造函数" class="headerlink" title="5.拷贝构造函数"></a>5.拷贝构造函数</h6><p>拷贝构造函数不允许传值，如果允许就会在拷贝构造函数内调用拷贝构造函数，就会形成永无休止的递归调用从而导致栈溢出。所以是不允许的，标准形式为A（const A&amp; other）。</p>
+<h6 id="6-赋值运算符函数"><a href="#6-赋值运算符函数" class="headerlink" title="6.赋值运算符函数"></a>6.赋值运算符函数</h6><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">CMyString&amp; operator=(const CMyString &amp;str)</span><br><span class="line">&#123;</span><br><span class="line">    if(this == str)</span><br><span class="line">    &#123;</span><br><span class="line">        return *this;</span><br><span class="line">    &#125;</span><br><span class="line">    delete []m_pData;</span><br><span class="line">    m_pData = NULL;</span><br><span class="line">    m_pData = new char[strlen(str.m_pData) + 1];</span><br><span class="line">    strcpy(m_pData, str.m_pData);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h6 id="注意点："><a href="#注意点：" class="headerlink" title="注意点："></a>注意点：</h6><ol>
+<li>是否把返回值类型声明为该类型的引用，并在函数结束前返回实例自身的引用(*this)。只有返回引用才允许连续赋值。否则如果函数的返回值是void，str1=str2=str3无法通过编译。</li>
+<li>是否把传入的参数类型声明为常量引用。如果传入的参数不是引用而是实例，那么从形参到实参会调用一次拷贝构造函数。声明为引用可以避免消耗，提升效率。在赋值运算符函数内不会改变传入的实例的状态，因此应该为传入的引用参数加上const关键字。</li>
+<li>是否释放实例自身已有的内存，忘记在新内存前释放自己已有的空间程序将出现内存泄露。</li>
+<li>是否判断传入参数和当前实例是否相同，如果相同则直接返回，如果事先不判断就进行赋值，那么在释放实例自身的内存时会出现严重的问题；当*this和传入参数相同时，一旦释放了自身内存，传入参数的内存同时被释放，再也找不到需要赋值的内容了。</li>
+</ol>
+<h6 id="高级做法："><a href="#高级做法：" class="headerlink" title="高级做法："></a>高级做法：</h6><p>再分配内存前先用delete释放了实例m_pData的内存。如果此时内存不足导致new char抛出异常，m_pData将是一个空指针，这样会引起程序崩溃。违背了异常安全性的原则。在赋值运算符函数中实现异常安全性，有两种方法。一是先用new分配新内容在用delete进行释放已有内容。这样只在分配内容成功后再释放原来的内容，当分配内存失败时我们可以确保实例不会被修改。更好的方法是先创建临时实例，再交换临时实例和原来的实例。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">CMyString&amp; operator=(const CMyString &amp;str)</span><br><span class="line">&#123;</span><br><span class="line">    if(this != &amp;str)</span><br><span class="line">    &#123;</span><br><span class="line">        CMyString strTemp(str);</span><br><span class="line">        char* pTemp = strTemp.m_pData;</span><br><span class="line">        strTemp.m_pData = m_pData;</span><br><span class="line">        m_pData = pTemp;</span><br><span class="line">    &#125;</span><br><span class="line">    return *this;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>strTemp是一个局部变量，但程序运行到if外面时出了变量的作用域，就会自动调用strTemp的析构函数，把strTemp.m_pData所指向的区域释放掉。相当于自动调用析构函数释放实例的内存。在CMyString的构造函数里用new分配内存。如果由于内存不足抛出bad_alloc等异常，我们还没有修改原来的实例状态，所以保证了异常安全性。</p>
+<h6 id="7-vector、数组、指针"><a href="#7-vector、数组、指针" class="headerlink" title="7.vector、数组、指针"></a>7.vector、数组、指针</h6><p>为了解决数组空间效率不高的问题，人们又设计实现了多种动态数组，比如c++的stl中的vector。为了避免浪费，我们先为数组开辟较小的空间，然后往数组中添加数据。当数组的数目超过数组的容量时，我们再重新分配一块更大的空间(stl中的vector每次扩充容量时，新的容量都是前一次的两倍)，把之前的数据复制到新的数组中，再把之前的内存释放，这样就能减少内存的浪费。每次扩充数组的容量都有大量的额外操作，这对时间性能有负面影响，因此使用动态数组要尽量减少改变数组容量大小的操作。在c++中当数组作为函数的参数进行传递时，数组就自动退化为同类型的指针。</p>
+<h6 id="8-字符串"><a href="#8-字符串" class="headerlink" title="8.字符串"></a>8.字符串</h6><p>sizeof(string)，string的实现在不同的库中可能有不同，但是同一个库中相同点是，无论string中放多长的字符串，它的sizeof都是固定的，字符串的所占空间是从堆中动态分配的，与sizeof无关。自己的机器上是32。c/c++中每个字符串都以字符’\0’作为结尾，这样可以方便的找到字符串的最后尾部。但由于这个特点，每个字符串中都有一个额外字符开销，可能会造成越界。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">char str[10];</span><br><span class="line">strcpy(str, &quot;0123456789&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>由于\0的原因，要正确的复制该字符串，至少需要一个长度为11个字节的数组。<br><br>为了节省内存，C/C++把常量字符串放到单独的一个内存区域。当几个指针赋值给相同的常量字符串时，它们实际上会指向相同的内存地址。但使用常量内存初始化数组，情况会有所不同。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">char str1[] = &quot;hello world&quot;;</span><br><span class="line">char str2[] = &quot;hello world&quot;;</span><br><span class="line">char* str3 = &quot;hello world&quot;;</span><br><span class="line">char* str4 = &quot;hello world&quot;;</span><br><span class="line">string str5 = &quot;hello world&quot;;</span><br><span class="line">string str6 = &quot;hello world&quot;;</span><br></pre></td></tr></table></figure></p>
+<p>str1和str2两个字符串数组，会为它们分配两个长度为12个字节的空间，并把“hello world”分别复制进去。这是两个初始地址不同的数组。str3和str4是两个指针，我们无须为它们分配内存来存储字符串中的内容，而只需要把它们指向”hello world”在内存中的地址即可。常量字符串在内存中只有一个拷贝，因此str3和str4指向同一个地址。str5与str6也是相同的，并且与str3公用内存地址。<br><br>合并两个数组(包括字符串)时，如果从前往后复制每个数字(或字符)需要重复移动数字(或字符)多次，那么可以考虑从后向前复制，这样就能减少移动的次数，从而提高效率。(替换空格题目)</p>
+<h6 id="9-链表"><a href="#9-链表" class="headerlink" title="9.链表"></a>9.链表</h6><p>特别注意向链表添加节点函数的第一个参数是指向指针的指针。当我们向空链表插入一个节点时，新插入的节点就是链表的头指针。由于此时会改动头指针，因此必须把pHead参数设为指针的指针。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">void AddToTail(ListNode** pHead, int value)</span><br><span class="line">&#123;</span><br><span class="line">    ListNode* pNew = new ListNode();</span><br><span class="line">    pNew-&gt;m_nValue = value;</span><br><span class="line">    pNew-&gt;m_pNext = NULL;</span><br><span class="line">    if(*pHead == NULL)</span><br><span class="line">        *pHead = pNew;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">        ListNode* temp = *pHead;</span><br><span class="line">        while(temp-&gt;m_pnext != NULL)</span><br><span class="line">        &#123;</span><br><span class="line">            temp = temp-&gt;m_pnext;</span><br><span class="line">        &#125;</span><br><span class="line">        temp-&gt;m_pnext = pNew;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h6 id="10-红黑树"><a href="#10-红黑树" class="headerlink" title="10.红黑树"></a>10.红黑树</h6><p>红黑树是把树中的节点定义为红黑两种颜色，并通过规则确保从根节点到叶节点的最长路径的长度不超过最短路径的两倍。在c++的stl中，set、multiset、map、multimap等数据结构都是基于红黑树实现的。</p>
+<h6 id="11-c-成员变量的初始化"><a href="#11-c-成员变量的初始化" class="headerlink" title="11.c++成员变量的初始化"></a>11.c++成员变量的初始化</h6><p>c++中成员变量的初始化顺序只与它们在类中声明的顺序有关，而与在初始化列表中的顺序无关。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">class A</span><br><span class="line">&#123;</span><br><span class="line">private:</span><br><span class="line">    int n1;</span><br><span class="line">    int n2;</span><br><span class="line">public:</span><br><span class="line">    A(): n2(0), n1(n2 + 2)</span><br><span class="line">    &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>n1先于n2被声明，因此n1也会在n2之前被初始化，所以先会用n2+2去初始化n1.由于n2这个时候还没有被初始化，因此它的值是随机的。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjg4jvp620001s7qwc55kpwl9" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-HSI-buffer-overflow" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/04/04/HSI-buffer-overflow/" class="article-date">
@@ -171,7 +231,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjfl8li7w0000gpqwz4glsajk" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjg4jvp6k0005s7qwrtzzle4n" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HSI/">HSI</a></li></ul>
@@ -253,7 +313,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjfl8li8m0003gpqwqysbjfcd" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjg4jvp670002s7qwpdos4krf" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -298,7 +358,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjfl8li8v0004gpqw7oxpizvs" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjg4jvp5t0000s7qw5e77oddg" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -338,7 +398,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjfl8li870001gpqwcfreev9j" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjg4jvp6i0004s7qw3zjefdqk" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -361,7 +421,7 @@ rm -rf /swapfile
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li></ul>
     </div>
   </div>
 
@@ -371,7 +431,7 @@ rm -rf /swapfile
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 10px;">LLVM</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 10px;">LLVM</a> <a href="/tags/复习/" style="font-size: 10px;">复习</a>
     </div>
   </div>
 
@@ -391,6 +451,10 @@ rm -rf /swapfile
     <h3 class="widget-title">letzter Beitrag</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2018/04/18/面试复习/">面试复习（1）</a>
+          </li>
         
           <li>
             <a href="/2018/04/04/HSI-buffer-overflow/">HSI buffer overflow</a>
