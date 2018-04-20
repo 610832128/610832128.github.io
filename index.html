@@ -62,6 +62,53 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-LLVM学习（2）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/20/LLVM学习（2）/" class="article-date">
+  <time datetime="2018-04-20T03:15:52.000Z" itemprop="datePublished">2018-04-20</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/04/20/LLVM学习（2）/">LLVM学习（2）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>LLVM的pass框架是LLVM系统的重要部分。LLVM的优化和转换工作就是由多个pass来一起完成的的。类似流水线操作一样，每个pass完成特定的优化工作。所有的pass大致可以分成两类：分析和转换分析类的pass以提供信息为主，转换类的会修改中间代码。</p>
+<p>假如LLVM的安装目录为/root/CL/llvm，那么首先在路径/root/CL/llvm/lib/Transforms中创建一个子文件夹，例如名字为HelloWorld。然后在此文件夹下创建三个文件，可以从其他文件夹复制过来。然后需要修改上层目录（Transforms）中的CMakeLists.txt：需要修改三次文件名，修改为HelloWorld，内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">if( NOT LLVM_REQUIRES_RTTI )</span><br><span class="line">  if( NOT LLVM_REQUIRES_EH )</span><br><span class="line">    set(LLVM_EXPORTED_SYMBOL_FILE $&#123;CMAKE_CURRENT_SOURCE_DIR&#125;/HelloWorld.exports)</span><br><span class="line">  endif()</span><br><span class="line">endif()</span><br><span class="line"></span><br><span class="line">if(WIN32 OR CYGWIN)</span><br><span class="line">  set(LLVM_LINK_COMPONENTS Core Support)</span><br><span class="line">endif()</span><br><span class="line"></span><br><span class="line">add_llvm_loadable_module( LLVMHelloWorld</span><br><span class="line">  HelloWorld.cpp</span><br><span class="line"></span><br><span class="line">  DEPENDS</span><br><span class="line">  intrinsics_gen</span><br><span class="line">  PLUGIN_TOOL</span><br><span class="line">  opt</span><br><span class="line">  )</span><br></pre></td></tr></table></figure></p>
+<p>上述build script中的如下部分：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">add_llvm_loadable_module( LLVMHelloWorld</span><br><span class="line">  HelloWorld.cpp  </span><br><span class="line"></span><br><span class="line">  PLUGIN_TOOL  </span><br><span class="line">  opt  </span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<p>这种写法指定当前目录中的HelloWorld.cpp文件编译并链接到共享对象../lib/LLVMHelloWorld.so中，该选项可以通过opt选项工具进行动态加载。如果操作系统使用.so之外的后缀（windows或mac）,则将使用相应的扩展名。</p>
+<p>接下来是pass文件中的具体内容，这个pass文件实际上就是一个.cpp文件，内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;llvm/IR/Function.h&quot;  </span><br><span class="line">#include &quot;llvm/Pass.h&quot;  </span><br><span class="line">#include &quot;llvm/Support/raw_ostream.h&quot;  </span><br><span class="line"></span><br><span class="line">using namespace llvm;  </span><br><span class="line"></span><br><span class="line">#define DEBUG_TYPE &quot;hello&quot;  </span><br><span class="line"></span><br><span class="line">namespace &#123;  </span><br><span class="line">  struct HelloWorld : public FunctionPass &#123;  </span><br><span class="line">    static char ID; // Pass identification, replacement for typeid  </span><br><span class="line">    HelloWorld() : FunctionPass(ID) &#123;&#125;  </span><br><span class="line"></span><br><span class="line">    bool runOnFunction(Function &amp;F) override &#123;  </span><br><span class="line">        errs() &lt;&lt; &quot;HelloWorld: &quot;;  </span><br><span class="line">        errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;  </span><br><span class="line">        return false;  </span><br><span class="line">    &#125;  </span><br><span class="line">  &#125;;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line">char MyHello::ID = 0;  </span><br><span class="line">static RegisterPass&lt;HelloWorld&gt; X(&quot;helloWorld&quot;, &quot;Hello World Pass&quot;);</span><br></pre></td></tr></table></figure></p>
+<p>代码1~3行首先需要引入用到的LLVM头文件，之后DEBUG_TYPE是LLVM用来统计该pass被呼叫的次数或者使用DEBUG输出出错信息时使用的。引用llvm命名空间，这不是好的习惯，但是较为方便。<br><br>使用匿名namespace，避免与export中的symbol冲突，其中HelloWorld继承FunctionPass，代表HelloWorld Pass的输入时以Function为单位。以下代码是重中之重,LLVM会以Function为单位作为参数传递，将每个Function的名称打印出来：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">bool runOnFunction(Function &amp;F) override &#123;  </span><br><span class="line">    errs() &lt;&lt; &quot;HelloWorld: &quot;;  </span><br><span class="line">    errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;  </span><br><span class="line">    return false;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>所有的Function pass独立的执行每一个函数。实现一个Function pass通常很简单，Function pass可能会重载三个虚方法（例如runOnFunction）。所有这些方法如果修改程序则返回true，否则返回false。</p>
+<p>接下来需要build LLVM，进入/root/CL/build目录中，直接make即可。在自己的环境下不到一分钟就可以完成。出现下图时，表示已经make完成，这时在/root/CL/build/lib中出现LLVMHelloWorld.so文件。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">[ 95%] Built target llvm-opt-report</span><br><span class="line">[ 96%] Built target llvm-pdbutil</span><br><span class="line">[ 96%] Built target RcTableGen</span><br><span class="line">[ 96%] Built target llvm-rc</span><br><span class="line">[ 96%] Built target llvm-readobj</span><br><span class="line">[ 96%] Built target llvm-readelf</span><br><span class="line">[ 96%] Built target llvm-rtdyld</span><br><span class="line">[ 96%] Built target llvm-size</span><br><span class="line">[ 96%] Built target llvm-special-case-list-fuzzer</span><br><span class="line">[ 96%] Built target llvm-split</span><br><span class="line">[ 96%] Built target llvm-stress</span><br><span class="line">[ 96%] Built target llvm-strings</span><br><span class="line">[ 96%] Built target llvm-symbolizer</span><br><span class="line">[ 98%] Built target llvm-xray</span><br><span class="line">[ 98%] Built target obj2yaml</span><br><span class="line">[ 98%] Built target opt</span><br><span class="line">[ 98%] Built target sancov</span><br><span class="line">[ 98%] Built target sanstats</span><br><span class="line">[ 98%] Built target verify-uselistorder</span><br><span class="line">[100%] Built target yaml2obj</span><br><span class="line">[100%] Built target SecondLib</span><br><span class="line">[100%] Built target PipSqueak</span><br><span class="line">[100%] Built target DynamicLibraryLib</span><br><span class="line">[100%] Built target gtest_main</span><br></pre></td></tr></table></figure></p>
+<p>然后可以在期望位置建立新的测试文件，例如cul.cpp内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">int add(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a + b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int sub(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a - b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int mul(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a * b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int divi(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a / b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>使用clang++ cul.cpp -O3 -S -emit-llvm -o cul.ll命令进行编译，生成.ll文件。然后执行pass，方法如下。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">opt -load ../CL/build/lib/LLVMHelloWorld.so -helloWorld  cul.ll</span><br></pre></td></tr></table></figure></p>
+<p>输出结果如下,由此可见pass的作用是逐个的在提示符”Hello”后输出程序中函数的名称：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze84k9sdnqv3f0fuhpwz LLVMCODE]# opt -load ../CL/build/lib/LLVMHelloWorld.so -helloWorld  cul.ll</span><br><span class="line">WARNING: You&apos;re attempting to print out a bitcode file.</span><br><span class="line">This is inadvisable as it may cause display problems. If</span><br><span class="line">you REALLY want to taste LLVM bitcode first-hand, you</span><br><span class="line">can force output with the `-f&apos; option.</span><br><span class="line"></span><br><span class="line">Hello: _Z3addii</span><br><span class="line">Hello: _Z3subii</span><br><span class="line">Hello: _Z3mulii</span><br><span class="line">Hello: _Z4diviii</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjg7dvodq0003foqwfslhhkvz" class="article-share-link">Teilen</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-面试复习" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/04/18/面试复习/" class="article-date">
@@ -110,7 +157,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjg4jvp620001s7qwc55kpwl9" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjg7dvoe00005foqw1p9exi0h" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -231,7 +278,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjg4jvp6k0005s7qwrtzzle4n" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjg7dvod50000foqw9dglzj0v" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HSI/">HSI</a></li></ul>
@@ -313,7 +360,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjg4jvp670002s7qwpdos4krf" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjg7dvoeg0009foqwzrzpcjft" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -358,7 +405,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjg4jvp5t0000s7qw5e77oddg" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjg7dvodt0004foqwcpb642jl" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -398,7 +445,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjg4jvp6i0004s7qw3zjefdqk" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjg7dvodd0001foqwerga6g9r" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -453,6 +500,10 @@ rm -rf /swapfile
       <ul>
         
           <li>
+            <a href="/2018/04/20/LLVM学习（2）/">LLVM学习（2）</a>
+          </li>
+        
+          <li>
             <a href="/2018/04/18/面试复习/">面试复习（1）</a>
           </li>
         
@@ -466,10 +517,6 @@ rm -rf /swapfile
         
           <li>
             <a href="/2018/03/13/P、NP、NP-hard、NPC问题/">P、NP、NP-hard、NPC问题</a>
-          </li>
-        
-          <li>
-            <a href="/2018/03/13/HelloWorld/">HelloWorld</a>
           </li>
         
       </ul>
