@@ -94,8 +94,9 @@
 <p>通过结果可知，每个基本块的大小与所有操作码数量之和是相同的。</p>
 <h5 id="Def-Use-and-Use-Def"><a href="#Def-Use-and-Use-Def" class="headerlink" title="Def-Use and Use-Def"></a>Def-Use and Use-Def</h5><p>Def-Use实现的功能是找出所有使用了某一个def（或称value）的instruction。Use-Def实现的功能是针对某一个instruction输出其所使用的所有operands（操作数）.</p>
 <blockquote>
-<p><strong>Def-Use:</strong> Frequently, we might have an instance of the Value Class and we want to determine which Users use the Value. The list of all Users of a particular Value is called a def-use chain.<br>let’s say we have a Function* named F to a particular function foo. Finding all of the instructions that use foo is as simple as iterating over the def-use chain of F:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Function *F = ...;    </span><br><span class="line">for (User *U : F-&gt;users()) &#123;  </span><br><span class="line">  if (Instruction *Inst = dyn_cast&lt;Instruction&gt;(U)) &#123;  </span><br><span class="line">    errs() &lt;&lt; &quot;F is used in instruction:\n&quot;;  </span><br><span class="line">    errs() &lt;&lt; *Inst &lt;&lt; &quot;\n&quot;;  </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><strong>Def-Use:</strong> Frequently, we might have an instance of the Value Class and we want to determine which Users use the Value. The list of all Users of a particular Value is called a def-use chain.<br>let’s say we have a Function* named F to a particular function foo. Finding all of the instructions that use foo is as simple as iterating over the def-use chain of F:</p>
 </blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Function *F = ...;    </span><br><span class="line">for (User *U : F-&gt;users()) &#123;  </span><br><span class="line">  if (Instruction *Inst = dyn_cast&lt;Instruction&gt;(U)) &#123;  </span><br><span class="line">    errs() &lt;&lt; &quot;F is used in instruction:\n&quot;;  </span><br><span class="line">    errs() &lt;&lt; *Inst &lt;&lt; &quot;\n&quot;;  </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>主要代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">bool runOnFunction(Function &amp;F) override &#123;</span><br><span class="line">  errs() &lt;&lt; &quot;Function name: &quot;;</span><br><span class="line">  errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;</span><br><span class="line"></span><br><span class="line">  for(Function::iterator bb = F.begin(); bb != F.end(); bb++)</span><br><span class="line">  &#123;   </span><br><span class="line">    errs() &lt;&lt; &quot;BasicBlock size = &quot; &lt;&lt; bb-&gt;size() &lt;&lt; &quot;\n&quot;;</span><br><span class="line">    for(BasicBlock::iterator i = bb-&gt;begin(); i != bb-&gt;end(); i++)</span><br><span class="line">    &#123;   </span><br><span class="line">        Instruction* inst = dyn_cast&lt;Instruction&gt;(i);</span><br><span class="line">        if(inst-&gt;getOpcode() == Instruction::Add || inst-&gt;getOpcode() == Instruction::Mul)</span><br><span class="line">        &#123;   </span><br><span class="line">            for(User *U: inst-&gt;users())</span><br><span class="line">            &#123;   </span><br><span class="line">                if(Instruction *Inst = dyn_cast&lt;Instruction&gt;(U))</span><br><span class="line">                &#123;   </span><br><span class="line">                    outs() &lt;&lt; &quot;Opcode &quot; &lt;&lt; inst-&gt;getOpcodeName() &lt;&lt; &quot; used in ::&quot;;</span><br><span class="line">                    outs() &lt;&lt; *Inst &lt;&lt; &quot;\n&quot;;</span><br><span class="line">                &#125;   </span><br><span class="line">            &#125;   </span><br><span class="line">        &#125;   </span><br><span class="line">    &#125;   </span><br><span class="line">  &#125;   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>采用之前的测试c++代码，输出结果如下,由上面的.ll程序可知，首先在函数中使用add和mul指令，然后在下一行ret指令中使用到了运算生成的变量。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze84k9sdnqv3f0fuhpwz LLVMCODE]# opt -load ../CL/build/lib/LLVMHelloWorld.so -helloWorld cul.ll</span><br><span class="line">WARNING: You&apos;re attempting to print out a bitcode file.</span><br><span class="line">This is inadvisable as it may cause display problems. If</span><br><span class="line">you REALLY want to taste LLVM bitcode first-hand, you</span><br><span class="line">can force output with the `-f&apos; option.</span><br><span class="line"></span><br><span class="line">Function name: __cxx_global_var_init</span><br><span class="line">BasicBlock size = 3</span><br><span class="line">Function name: _Z3addii</span><br><span class="line">BasicBlock size = 8</span><br><span class="line">Opcode add used in ::  ret i32 %7</span><br><span class="line">Function name: _Z3mulii</span><br><span class="line">BasicBlock size = 8</span><br><span class="line">Opcode mul used in ::  ret i32 %7</span><br><span class="line">Function name: main</span><br><span class="line">BasicBlock size = 9</span><br><span class="line">Function name: _GLOBAL__sub_I_cul.cpp</span><br><span class="line">BasicBlock size = 2</span><br></pre></td></tr></table></figure></p>
 <blockquote>
@@ -109,7 +110,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjg9lxwts00054oqwibkcpb05" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjg9lybkf00058iqw77gzqbki" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -158,7 +159,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjg9lxwte00044oqw6vom0b3a" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjg9lybkb00048iqw6haxycek" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -218,7 +219,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjg9lxwtx00094oqw9gs3gd93" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjg9lybkv00098iqwban4vzlf" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -339,7 +340,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjg9lxwsn00004oqw1c8deuqk" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjg9lybjo00008iqwk4gh97s3" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HSI/">HSI</a></li></ul>
@@ -421,7 +422,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjg9lxwtb00034oqwvvf870di" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjg9lybk800038iqwbhm0e309" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -466,7 +467,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjg9lxwtv00084oqwtap2w66l" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjg9lybks00088iqwddr9c938" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -506,7 +507,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjg9lxwsx00014oqwuqvphneh" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjg9lybjz00018iqwk060hims" class="article-share-link">Teilen</a>
       
       
     </footer>
