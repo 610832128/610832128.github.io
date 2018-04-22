@@ -84,7 +84,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="LLVM学习（3）"><a href="#LLVM学习（3）" class="headerlink" title="LLVM学习（3）"></a>LLVM学习（3）</h1><p>上一篇通过简单的HelloWorld演示了在LLVM中编写Pass的基本方法，本文将介绍一些其他的pass实例,创建以及修改pass文件以及build llvm等内容不再重复。<br>首先在LLVM中，程序的基本单位是模块。函数是模块的基本组成单位，一个模块由一个或多个函数组成。Basic Block又是函数的基本组成单位，所以一个Function由一个或多个Basic block组成。指令是Basic Block的基本组成单位，一个Basic Block由一个或多个指令组成。<br><br>Module—&gt;Function—&gt;Basic Block—&gt;instruction</p>
+        <p>上一篇通过简单的HelloWorld演示了在LLVM中编写Pass的基本方法，本文将介绍一些其他的pass实例,创建以及修改pass文件以及build llvm等内容不再重复。<br>首先在LLVM中，程序的基本单位是模块。函数是模块的基本组成单位，一个模块由一个或多个函数组成。Basic Block又是函数的基本组成单位，所以一个Function由一个或多个Basic block组成。指令是Basic Block的基本组成单位，一个Basic Block由一个或多个指令组成。<br><br>Module—&gt;Function—&gt;Basic Block—&gt;instruction</p>
 <h5 id="利用pass在函数中遍历Basic-Block"><a href="#利用pass在函数中遍历Basic-Block" class="headerlink" title="利用pass在函数中遍历Basic Block"></a>利用pass在函数中遍历Basic Block</h5><p>本文中直接在HelloWorld.cpp中进行修改，内容修改如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;llvm/ADT/Statistic.h&quot;</span><br><span class="line">#include &quot;llvm/IR/Function.h&quot;</span><br><span class="line">#include &quot;llvm/Pass.h&quot;</span><br><span class="line">#include &quot;llvm/Support/raw_ostream.h&quot;</span><br><span class="line">using namespace llvm;</span><br><span class="line"></span><br><span class="line">#define DEBUG_TYPE &quot;hello&quot;</span><br><span class="line"></span><br><span class="line">STATISTIC(HelloCounter, &quot;Counts number of functions greeted&quot;);</span><br><span class="line"></span><br><span class="line">namespace &#123;</span><br><span class="line">  struct HelloWorld : public FunctionPass &#123;</span><br><span class="line">    static char ID; // Pass identification, replacement for typeid</span><br><span class="line">    HelloWorld() : FunctionPass(ID) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    bool runOnFunction(Function &amp;F) override &#123;</span><br><span class="line">      errs() &lt;&lt; &quot;Function name: &quot;;</span><br><span class="line">      errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;</span><br><span class="line"></span><br><span class="line">      for(Function::iterator bb = F.begin(); bb != F.end(); bb++)</span><br><span class="line">      &#123;   </span><br><span class="line">        errs() &lt;&lt; &quot;BasicBlock name = &quot; &lt;&lt; bb-&gt;getName() &lt;&lt; &quot;\n&quot;;</span><br><span class="line">        errs() &lt;&lt; &quot;BasicBlock size = &quot; &lt;&lt; bb-&gt;size() &lt;&lt; &quot;\n\n&quot;;</span><br><span class="line">        for(BasicBlock::iterator i = bb-&gt;begin(); i != bb-&gt;end(); i++)</span><br><span class="line">        &#123;   </span><br><span class="line">            outs() &lt;&lt; &quot; &quot; &lt;&lt; *i &lt;&lt; &quot;\n&quot;;</span><br><span class="line">        &#125;   </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return false;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">char HelloWorld::ID = 0;</span><br><span class="line">static RegisterPass&lt;HelloWorld&gt; X(&quot;helloWorld&quot;, &quot;Hello World Pass&quot;);</span><br></pre></td></tr></table></figure></p>
 <p>代码首先打印每个函数的名称，接下来使用迭代器对每个函数中的Basic Block进行遍历，并且输出每个Basic Block的名称和大小。然后对每个Basic Block中的指令进行遍历。输出每条具体指令。接下来创建测试文件cul.cpp，内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line">int add(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a + b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int mul(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a * b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    cout &lt;&lt; add(1, 2) &lt;&lt; endl;</span><br><span class="line">    cout &lt;&lt; mul(5, 6) &lt;&lt; endl;</span><br><span class="line">  return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>接下来使用以下命令执行<figure class="highlight plain"><figcaption><span>cul.cpp -O0 -S -emit-llvm -o cul.ll，opt -load ../CL/build/lib/LLVMHelloWorld.so -helloWorld cul.ll```。</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">输出结果如下：</span><br></pre></td></tr></table></figure></p>
@@ -116,7 +116,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjga7sg3n00055tqw0n8evujz" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjga7ti5c0005cfqwc8b8bo9d" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -165,7 +165,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjga7sg3k00045tqwfow4cew8" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjga7ti4w0004cfqwhsts83jo" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -225,7 +225,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjga7sg4400095tqwl0sqqk3x" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjga7ti5f0009cfqwacxxd1kc" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -346,7 +346,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjga7sg2x00005tqwz539610v" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjga7ti480000cfqwqxvnu1dg" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HSI/">HSI</a></li></ul>
@@ -428,7 +428,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjga7sg3g00035tqw4mbb28k4" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjga7ti4t0003cfqwtq0zruyd" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -473,7 +473,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjga7sg4200085tqw3tu7606e" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjga7ti5e0008cfqwnxeae618" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -513,7 +513,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjga7sg3700015tqwsw4s5c9r" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjga7ti4k0001cfqwl90sccc3" class="article-share-link">Teilen</a>
       
       
     </footer>
