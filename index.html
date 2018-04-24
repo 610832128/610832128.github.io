@@ -62,6 +62,48 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-面试复习（2）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/25/面试复习（2）/" class="article-date">
+  <time datetime="2018-04-24T16:56:04.000Z" itemprop="datePublished">2018-04-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/04/25/面试复习（2）/">面试复习（2）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h6 id="1-两个栈模拟一个队列（模板代码）"><a href="#1-两个栈模拟一个队列（模板代码）" class="headerlink" title="1.两个栈模拟一个队列（模板代码）"></a>1.两个栈模拟一个队列（模板代码）</h6><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename T&gt; void CQueue&lt;T&gt;::appendTail(const T&amp; element)</span><br><span class="line">&#123;</span><br><span class="line">    stack1.push(element);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">template&lt;typename T&gt; T CQueue&lt;T&gt;::deleteHead()</span><br><span class="line">&#123;</span><br><span class="line">    T tmp;</span><br><span class="line">    if(stack2.empty())</span><br><span class="line">    &#123;</span><br><span class="line">        while(!stack1.empty())</span><br><span class="line">        &#123;</span><br><span class="line">            tmp = stack1.top();</span><br><span class="line">            stack1.pop();</span><br><span class="line">            stack2.push(tmp);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if(stack2.empty())</span><br><span class="line">        throw new exception(&quot;queue is empty&quot;);</span><br><span class="line">    tmp = stack2.top();</span><br><span class="line">    stack2.pop();</span><br><span class="line">    return tmp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h6 id="2-二进制中1的个数"><a href="#2-二进制中1的个数" class="headerlink" title="2.二进制中1的个数"></a>2.二进制中1的个数</h6><p>最重要的公式：将一个整数和它减一的结果做位与运算，相当于把最右边的1变成了0。所以伪代码为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">int NumberOf1(int n)</span><br><span class="line">&#123;</span><br><span class="line">    int num = 0;</span><br><span class="line">    while(n)</span><br><span class="line">    &#123;</span><br><span class="line">        n = n &amp; (n - 1);</span><br><span class="line">        num++;</span><br><span class="line">    &#125;</span><br><span class="line">    return num;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h6 id="3-数值的整数次方"><a href="#3-数值的整数次方" class="headerlink" title="3.数值的整数次方"></a>3.数值的整数次方</h6><p>实现函数double Power(double base, int exponent)，需要注意的有以下几点：<br><br>1.当指数为负数时，先求绝对值，计算后求倒数。<br><br>2.当底数为0且指数为负数时，会出现对0求倒数，可以通过返回值，全局代码或异常来处理错误。<br><br>3.0的0次方时没有意义的，所以要考虑这个边界值。<br><br>4.判断底数是否为0时，不能直接写base = 0，因为在计算机内表示小数时会有误差，判断两个小数是否相等时，只能判断它们的差得绝对值是否在很小的范围内。<br><br>代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">bool g_InvalidInput = false;</span><br><span class="line">bool equal(double num1, double num2)</span><br><span class="line">&#123;</span><br><span class="line">    if(num1 - num2 &lt; 0.0000001 &amp;&amp; num1 - num2 &gt; -0.0000001)</span><br><span class="line">        return true;</span><br><span class="line">    return false;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">double PowerWithUnsignedExponent(double base, unsigned int exponent)</span><br><span class="line">&#123;</span><br><span class="line">    if(exponent == 1)</span><br><span class="line">    &#123;</span><br><span class="line">        return base;</span><br><span class="line">    &#125;</span><br><span class="line">    else if(exponent == 0)</span><br><span class="line">        return 1;</span><br><span class="line"></span><br><span class="line">    double result = PowerWithUnsignedExponent(base, exponent &gt;&gt; 1);</span><br><span class="line">    result *= result;</span><br><span class="line">    if(exponent % 2 == 1)</span><br><span class="line">        result *= base;</span><br><span class="line"></span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">double Power(double base, int exponent)</span><br><span class="line">&#123;</span><br><span class="line">    g_InvalidInput = false;</span><br><span class="line">    int absExponent = exponent;</span><br><span class="line">    if(equal(base, 0.0) &amp;&amp; exponent &lt; 0)</span><br><span class="line">    &#123;</span><br><span class="line">        g_InvalidInput = true;</span><br><span class="line">        return 0.0;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    unsigned int absExponent = unsigned int(exponent);</span><br><span class="line">    if(exponent &lt; 0)</span><br><span class="line">    &#123;</span><br><span class="line">        absExponent = (unsigned int)()-exponent);</span><br><span class="line">    &#125;</span><br><span class="line">    double res = PowerWithUnsignedExponent(base, absExponent);</span><br><span class="line">    if(exponent &lt; 0)</span><br><span class="line">        res = 1.0 / res;</span><br><span class="line">    return res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>4.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjgdwxp1s0005mzqwxjobgd37" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-LLVM学习（3）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/04/22/LLVM学习（3）/" class="article-date">
@@ -113,7 +155,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjga7v4bn0005liqw1lpbdh23" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjgdwxp2r000hmzqwm2fs0xnw" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -162,7 +204,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjga7v4b90004liqwnf84ps45" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjgdwxp1g0003mzqwfph8xzoy" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -222,7 +264,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjga7v4bs0009liqw6kqy4q1l" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjgdwxp1x0009mzqwvq1ofkz7" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -343,7 +385,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjga7v4ak0000liqwi23p6zht" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjgdwxp1o0004mzqw2i2n2kna" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HSI/">HSI</a></li></ul>
@@ -425,7 +467,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjga7v4b70003liqwndby112e" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjgdwxp0w0000mzqw75xzkb24" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -470,7 +512,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjga7v4bq0008liqw4hyqzfkk" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjgdwxp1v0008mzqwml69ah3a" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -510,7 +552,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjga7v4aw0001liqw3x3r4d7b" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjgdwxp170001mzqw0j6z9rui" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -543,7 +585,7 @@ rm -rf /swapfile
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 10px;">复习</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a>
     </div>
   </div>
 
@@ -565,6 +607,10 @@ rm -rf /swapfile
       <ul>
         
           <li>
+            <a href="/2018/04/25/面试复习（2）/">面试复习（2）</a>
+          </li>
+        
+          <li>
             <a href="/2018/04/22/LLVM学习（3）/">LLVM学习（3）</a>
           </li>
         
@@ -578,10 +624,6 @@ rm -rf /swapfile
         
           <li>
             <a href="/2018/04/04/HSI-buffer-overflow/">HSI buffer overflow</a>
-          </li>
-        
-          <li>
-            <a href="/2018/03/30/LLVM学习（1）/">LLVM学习（1）</a>
           </li>
         
       </ul>
