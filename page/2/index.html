@@ -62,6 +62,49 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-P、NP、NP-hard、NPC问题" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/03/13/P、NP、NP-hard、NPC问题/" class="article-date">
+  <time datetime="2018-03-12T16:27:24.000Z" itemprop="datePublished">2018-03-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/03/13/P、NP、NP-hard、NPC问题/">P、NP、NP-hard、NPC问题</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="P问题："><a href="#P问题：" class="headerlink" title="P问题："></a>P问题：</h4><p>一个问题可以在多项式的时间得到解决。P为英文<code>polynominal</code>的首字母。多项式时间的时间复杂度例如<code>O(n)</code>、<code>O(n^2)</code>等等。</p>
+<h4 id="NP问题："><a href="#NP问题：" class="headerlink" title="NP问题："></a>NP问题：</h4><p>NP问题可能没有一个已知的快速解决方案。但如果能够在多项式的时间内验证一个解是否正确，则称此问题为NP问题。例如根据数据画好了一个图。求解能否找到权重和小于100的生成树。这个问题可以在多项式的时间内得到验证。假设你运气好，随手一画就得到了小于100的生成树，验证的方法只需要将生成树的所有树边权重相加。时间复杂度为<code>O(V)</code>。V代表树的结点树，生成树的边数为<code>|V|-1</code>。</p>
+<h4 id="NPC问题"><a href="#NPC问题" class="headerlink" title="NPC问题"></a>NPC问题</h4><p>提到NPC问题之前需要了解的概念是规约。例如一个问题A可以约化为问题B的含义是，可以用问题B的解法来解决问题A。或者说A可以转化为B。例如求一元一次方程可以规约到求一元二次方程。将一元二次方程的二次项系数变为0。这样两个问题就等价了。通过实例也可看出问题B不比问题A简单，即问题B的时间复杂度高于或者等于A。规约是具有传递性的。A规约成B，B规约成C，则A能够规约成C。</p>
+<p>通过不断地规约，我们能得到复杂度更高但是应用范围更广的算法来代替复杂度虽低但是应用范围小的一类问题的算法。根据传递性，最终可以得到一个复杂度最高，并且可以解决所有NP问题的NP问题。这就是NPC问题，即NP完全问题。NPC不止一个，而是一系列问题。</p>
+<h4 id="证明一个问题是NPC问题的步骤："><a href="#证明一个问题是NPC问题的步骤：" class="headerlink" title="证明一个问题是NPC问题的步骤："></a>证明一个问题是NPC问题的步骤：</h4><p>1.首先要证明此问题是一个NP问题。2.证明一个已知的NPC问题能够规约到此问题。已知的NPC问题，给定一个逻辑电路，是否存在一种输入使得输出为<code>True</code>。所有的NP问题都可以规约到逻辑电路问题。直观地解释是计算机中所有的程序最终都转化成01组成的机器语言执行。</p>
+<p>另外一个比较神奇的问题是，因为NPC问题是NP问题不断规约而来的，所以如果能证明一个NPC问题可以在多项式时间内解决。那么所有的NP问题都能在多项式时间内解决。即<code>NP=P</code>。遗憾的是此题目前无解。</p>
+<h4 id="NP-hard问题："><a href="#NP-hard问题：" class="headerlink" title="NP-hard问题："></a>NP-hard问题：</h4><p>NP-hard问题满足NPC问题定义中的第二条。但是不一定满足第一条。即NP-hard的范围比NPC范围更广。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjghqen9b0009ndqwyvtv1upn" class="article-share-link">Teilen</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-HelloWorld" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/03/13/HelloWorld/" class="article-date">
@@ -92,7 +135,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjghmcvg40002pkqw3048cy21" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjghqen8l0002ndqwzi5igadh" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -130,7 +173,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a>
     </div>
   </div>
 
@@ -152,6 +195,10 @@
       <ul>
         
           <li>
+            <a href="/2018/04/27/线程（3）/">线程（3）</a>
+          </li>
+        
+          <li>
             <a href="/2018/04/27/线程（2）/">线程（2）</a>
           </li>
         
@@ -165,10 +212,6 @@
         
           <li>
             <a href="/2018/04/25/面试复习（2）/">面试复习（2）</a>
-          </li>
-        
-          <li>
-            <a href="/2018/04/22/LLVM学习（3）/">LLVM学习（3）</a>
           </li>
         
       </ul>
