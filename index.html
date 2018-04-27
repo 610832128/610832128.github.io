@@ -62,6 +62,68 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-网络（1）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/27/网络（1）/" class="article-date">
+  <time datetime="2018-04-27T14:21:22.000Z" itemprop="datePublished">2018-04-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/04/27/网络（1）/">网络</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="网络通讯"><a href="#网络通讯" class="headerlink" title="网络通讯"></a>网络通讯</h4><h5 id="一些术语"><a href="#一些术语" class="headerlink" title="一些术语"></a>一些术语</h5><ol>
+<li>主机： <code>Host</code>,包含台式机、笔记本、手机等设备。</li>
+<li>网络： <code>Internet</code></li>
+<li>网络介质：<code>Media</code>：网线，光纤，无线网域网<code>wifi</code>，移动<code>3G</code>网络。</li>
+<li>数据：<code>Data</code>，一串字节。</li>
+</ol>
+<h5 id="网络通讯观测"><a href="#网络通讯观测" class="headerlink" title="网络通讯观测"></a>网络通讯观测</h5><p><code>wireshark</code>，“抓包”工具，抓，<code>capture</code>。包，<code>packet</code>,数据包。</p>
+<h5 id="IP地址"><a href="#IP地址" class="headerlink" title="IP地址"></a>IP地址</h5><p><code>Internet protocol Address</code>，网络协议地址，用于标识网络上的一台主机。<br>通常采用4字节表示，称为<code>IPv4</code>。用字符串表示时，采用10进制，以点号分开：<br><code>&quot;192.168.1.1&quot;</code>（家庭路由器地址）、<code>&quot;123.57.248.214&quot;</code>,用16进制表示<code>C0 A8 01 01</code>、<code>7B 39 F8 D6</code>。</p>
+<h5 id="ping：检测连通"><a href="#ping：检测连通" class="headerlink" title="ping：检测连通"></a>ping：检测连通</h5><p><code>windows/linux</code>下都有<code>ping</code>命令，它可以检查对方的主机是否能够连通。<code>ping 123.27.148.124</code>。如果能连通说明对方主机在线，否则请求超时有三种可能性：</p>
+<ol>
+<li>对方关机、离线</li>
+<li>己方没有连网。</li>
+<li>对方在线，但是屏蔽了<code>PING</code>服务。</li>
+</ol>
+<h5 id="查看自己的ip地址"><a href="#查看自己的ip地址" class="headerlink" title="查看自己的ip地址"></a>查看自己的ip地址</h5><p><code>windows: ipcofig linux: ifconfig</code></p>
+<h4 id="Socket复用技术"><a href="#Socket复用技术" class="headerlink" title="Socket复用技术"></a>Socket复用技术</h4><h5 id="Socket概念"><a href="#Socket概念" class="headerlink" title="Socket概念"></a>Socket概念</h5><p>两台主机进行通讯，运行不同的程序，它们都在使用网络进行数据的传输。<br>为什么一台主机上的多个程序可以同时使用网络？引入<code>Socket</code>概念，原意为“插座”，形象的表示用一根线连接两个插座，即形成一个数据通道。每个插口可以用一个数字标识（<code>0~65535</code>），这个数字就称为端口（<code>Port</code>）。<br>两个程序要进行通讯，就要各自选择一个插口，然后连接起来。<br>程序1：在<code>192.168.1.100</code>上运行，使用端口<code>9001</code>。<br>程序2：在<code>192.168.1.101</code>上运行，使用端口<code>9002</code>。<br>连接上来，就形成了一个数据通道，它们俩之间可以交流数据了（只是逻辑上的通道）。</p>
+<h5 id="复用技术"><a href="#复用技术" class="headerlink" title="复用技术"></a>复用技术</h5><p>在多个<code>socket</code>,每个<code>socket</code>上同时传输着不同的数据（视频、文件、网页下载等）。但是网线只有一根，字节是串行传输的，如何保证正确性？<br>可以采用<strong>封包</strong>的方法，将(<code>IP,Port</code>)放在包头。这种在一个信道中，交叉间隔的传输数据的方案，叫做“分时复用”。<code>Mux</code>，重复利用的意思。</p>
+<ol>
+<li>发送方：复用<code>Mux</code><br>将每个<code>Socket</code>上的数据，拆分成固定格式的小包，每个小包前面加上<code>IP/Port</code>，按照时间间隔，轮番发送到信道中。</li>
+<li>接收方：解复用<code>Demux</code><br>从信道中接收小包，根据包头里的Port，将小包还原成原始数据，再分发给不同的<code>Socket</code>处理。</li>
+</ol>
+<h6 id="大包拆分成小包"><a href="#大包拆分成小包" class="headerlink" title="大包拆分成小包"></a>大包拆分成小包</h6><p>一边拆一边合。每个包的包头加上一些标识。分包的目的是各个Socket均匀占用网络。</p>
+<h4 id="UDP-Socket"><a href="#UDP-Socket" class="headerlink" title="UDP Socket"></a>UDP Socket</h4><p><code>UDP</code>: <code>User Datagram Protocol</code>，用户数据报文协议。适用于局域网的主机间通信。两台主机上的程序，在知道了对方的<code>Socket</code>地址之后，就可以适用<code>UDP</code>传输数据。<br> 发送方：<code>UdpSocket sock; sock.sendTo(...)</code>。<br> 接收方：<code>UdpSocket sock; sock.RecvFrom(...)</code>。</p>
+<h5 id="单机测试"><a href="#单机测试" class="headerlink" title="单机测试"></a>单机测试</h5><p>正常情况下，<code>Socket</code>编程的目的是为了将数据传送到另一台主机，因此需要两台主机才可以完成测试。例如<code>192.168.1.100 -&gt; 192.168.1.101</code>。当没有多主机环境时，可以使用单机测试，目标地址为<code>127.0.0.1</code>，表示本机。当指定发送目标为<code>127.0.0.1</code>时，发送的数据不经过网卡，直接在系统内回环送回。又称为<code>loopback</code>地址（回环地址）。<code>wireshark</code>无法监测<code>loopback</code>上的数据，因为根本没有通过网卡传送。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjgi1qknf000gprqwlfnfbssy" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-线程（3）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/04/27/线程（3）/" class="article-date">
@@ -93,12 +155,12 @@
 <p>使用信号量机制的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">queue</span>&lt;<span class="keyword">int</span>&gt; q;</span><br><span class="line">OS_Mutex g_mutex;</span><br><span class="line"><span class="function">OS_Semaphore <span class="title">g_sem</span><span class="params">(<span class="number">0</span>)</span></span>; <span class="comment">//将初始信号量设置为0</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Producer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">int</span> r = rand() % <span class="number">20</span> + <span class="number">1</span>;</span><br><span class="line">            q.push(r);</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"放入物品："</span> &lt;&lt; r &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">            g_sem.Post();</span><br><span class="line">            Msleep(r * <span class="number">50</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Consumer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">            g_sem.Wait();</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">while</span>(!q.empty())</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">int</span> tmp = q.front();</span><br><span class="line">                q.pop();</span><br><span class="line">                <span class="built_in">cout</span> &lt;&lt; <span class="string">"取出物品："</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>可以根据实际情况，将信号量的值初始化为<code>0</code>或其他正数，一般情况信号量的初始值由你的实现应用中对应的那个量决定，比如，缓冲区中的物品数量：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">OS_Semaphore g_sem(0);</span><br><span class="line">OS_Semaphore g_sem(10); //已经有了10个量</span><br></pre></td></tr></table></figure></p>
 <h6 id="超时等待机制"><a href="#超时等待机制" class="headerlink" title="超时等待机制"></a>超时等待机制</h6><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> ret = g_sem.Wait(<span class="number">1000</span>); <span class="comment">//ms</span></span><br><span class="line"><span class="keyword">if</span>(ret != <span class="number">0</span>) <span class="comment">//如果返回值不为0，表明已经超时</span></span><br><span class="line">&#123;<span class="comment">//超时处理&#125;</span></span><br></pre></td></tr></table></figure>
-<p><code>osapi</code>中超时处理的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> OS_Semaphore::Wait(<span class="keyword">int</span> ms)</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    timeval tv_now;</span><br><span class="line">    gettimeofday(&amp;tv_now, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    timespec ts;</span><br><span class="line">    ts.tv_sec = tv_now.tv_sec;</span><br><span class="line">    ts.tv_nsec = tv_now.tv_usec * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> ns = ts.tv_nsec + (ms % <span class="number">1000</span>)  * <span class="number">1000000</span>;</span><br><span class="line">    ts.tv_nsec = ns % <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ns / <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ms / <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sem_timedwait(&amp;priv-&gt;hSem, &amp;ts) != <span class="number">0</span>)</span><br><span class="line">    &#123;   </span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>osapi</code>中超时处理的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> OS_Semaphore::Wait(<span class="keyword">int</span> ms)</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    timeval tv_now;</span><br><span class="line">    gettimeofday(&amp;tv_now, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    timespec ts;</span><br><span class="line">    ts.tv_sec = tv_now.tv_sec;</span><br><span class="line">    ts.tv_nsec = tv_now.tv_usec * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> ns = ts.tv_nsec + (ms % <span class="number">1000</span>)  * <span class="number">1000000</span>;</span><br><span class="line">    ts.tv_nsec = ns % <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ns / <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ms / <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sem_timedwait(&amp;priv-&gt;hSem, &amp;ts) != <span class="number">0</span>)</span><br><span class="line">    &#123;   </span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjghqen9k000endqwncip5bhv" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjgi1qknd000eprqwmx57vxc6" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -170,7 +232,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjghqen9i000cndqwf5mz26yl" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjgi1qknb000cprqw0m2jkr3i" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -247,7 +309,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjghqen9e000andqwjyn3gyts" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjgi1qkn3000aprqwlj52rzw0" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -319,7 +381,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjghqen7u0000ndqwpdscrgy8" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjgi1qklt0000prqwnif9a7p0" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -359,7 +421,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjghqen9v000indqwwmmr3qva" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjgi1qknl000kprqwb2oliim7" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -422,7 +484,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjghqen940006ndqw9l0ni5as" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjgi1qkmz0006prqw205lrnhq" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -471,7 +533,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjghqen920005ndqw3be2gygm" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjgi1qkmx0005prqws2jmqwvu" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -553,7 +615,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjghqen9t000gndqw7njbpaqu" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjgi1qkng000iprqw6wnhsw3i" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -674,92 +736,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjghqen8d0001ndqwb9a3dz1s" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjgi1qkm50001prqwcx4hfmk7" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HSI/">HSI</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-LLVM学习（1）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/03/30/LLVM学习（1）/" class="article-date">
-  <time datetime="2018-03-30T02:06:15.000Z" itemprop="datePublished">2018-03-30</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/03/30/LLVM学习（1）/">LLVM学习（1）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>实验室可能要接一个对线程伪共享进行检测和优化的项目，其中一些方法要基于LLVM这个框架实现，所以自己开始研究LLVM。</p>
-<p>LLVM（low level virtual machine）是一个编译器框架，最早是Illinois的一个研究项目，它的主要作用是可以作为多种语言的后端，它可以提供与可编程语言无关的优化和针对很多种CPU的代码生成功能，llvm目前也不仅仅是一个框架，它还包含了很多子项目，比如clang。LLVM的优点是开源，同时他有一个表达形式很好的IR语言。</p>
-<p>我的操作系统是cento OS，官方是使用svn进行版本控制的，可以通过SVN获取源码，安装过程中要用到cmake命令，并且要求cmake版本在3.4以上，直接使用<code>yum install cmake</code>命令安装的版本是不满足要求的。</p>
-<p>libc++是针对Clang开发的C++标准库，包含了对C++11的完整支持，其与clang的关系就行libstdc++与GCC的关系。</p>
-<h2 id="下载源码"><a href="#下载源码" class="headerlink" title="下载源码"></a>下载源码</h2><p>下载步骤如下，要注意目录结构：</p>
-<pre><code>#下载llvm
-mdkir LC
-cd LC
-svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm
-#下载clang
-cd llvm/tools
-svn co http://llvm.org/svn/llvm-project/cfe/trunk clang
-#下载Compiler-RT
-cd llvm/project
-svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk compiler-rt
-#下载标准库libcxx和libcxxabi
-svn co http://llvm.org/svn/llvm-project/libcxx/trunk libcxx
-svn co http://llvm.org/svn/llvm-project/libcxxabi/trunk libcxxabi
-</code></pre><h2 id="编译安装"><a href="#编译安装" class="headerlink" title="编译安装"></a>编译安装</h2><p>LLVM进制源码内编译（in-tree build is not supposed）， 因此我们需要在源码目录外新建目录来存放编译后的文件。新建build目录并进入目录，使用cmake得到Makefile文件，然后使用make进行编译，<strong>-G “Unix Makefiles”</strong> 表示要使用cmake工具得到Unix安装环境下的Makefile。LLVM支持并行编译，make -j2代表着同时在两个核上进行并行编译，最后使用make install进行安装。</p>
-<pre><code>cd..
-mkdir build
-cd build
-cmake -G &quot;Unix Makefiles&quot; -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=&quot;X86&quot; ../llvm
-make -j2
-sudo make install
-</code></pre><h2 id="C-internal-compiler-error-Killed-program-cc1plus-错误解决方法"><a href="#C-internal-compiler-error-Killed-program-cc1plus-错误解决方法" class="headerlink" title="C++: internal compiler error: Killed(program cc1plus)错误解决方法"></a>C++: internal compiler error: Killed(program cc1plus)错误解决方法</h2><p>如果编译的机器内存较小，可能会出现上述错误，这时可以通过创建交换空间来解决，Linux将随机存储RAM称为内存页。交换技术就是将一页内存复制到预先设定的硬盘上的交换空间，从而释放内存。物理内存和交换空间的和就是可提供的虚拟空间的总量。</p>
-<p>当系统需要的内存量比物理内存更大时，系统内核可以把较少使用的内存页写到交换空间，把空闲出来的内存给当前应用程序（进程）使用。一个应用启动时使用的内存页可能只有启动时会用到，操作系统可以把这部分内存页写入交换空间。</p>
-<p>但是交换空间技术也有负面因素，因为相对于内存磁盘读写的速度很慢，内存读写速度为纳秒级，但是硬盘速度为毫秒级。所以发生的交换越多，系统运行的速度就越慢。</p>
-<p>Linux有两种形式的交换空间：交换分区和交换文件。交换分区是一个独立的硬盘，没有文件等内容。交换文件是文件系统中的特殊文件，独立于系统和数据文件之外。 可以使用<code>swapon -s</code>来查看swap空间。</p>
-<p>针对本文中的问题,可以通过下面方式解决：</p>
-<pre><code>#创建空文件，if输入 of输出 bs块大小 count总大小
-dd if=/dev/zero of=/swapfile bs=1024 count=1024000
-#swapfile是交换文件的名字，准备交换文件使用mkswap命令
-mkswap /swapfile是交换文件的名字
-#挂载文件
-swapon /swapfile
-</code></pre><p>可以通过<code>free -m</code>查看是否生效，通过下图可以看到交换文件创建成功。</p>
-<p><img src="/images/free-m.png" alt=""></p>
-<p>创建完毕后可以重新<code>make</code>一下，应该可以顺利完成了。之后可以将交换文件删除，删除的命令如下：</p>
-<pre><code>#首先停止swap分区
-swapoff /swapfile是交换文件的名字
-#删除swap分区文件
-rm -rf /swapfile
-</code></pre><p>最后可以通过<code>clang --version</code>和<code>llvm-config --version</code>查看LLVM和clang是否安装成功。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjghqen900004ndqw8j0j47io" class="article-share-link">Teilen</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
 
     </footer>
   </div>
@@ -786,7 +766,7 @@ rm -rf /swapfile
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
     </div>
   </div>
 
@@ -796,7 +776,7 @@ rm -rf /swapfile
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 10px;">网络</a>
     </div>
   </div>
 
@@ -818,6 +798,10 @@ rm -rf /swapfile
       <ul>
         
           <li>
+            <a href="/2018/04/27/网络（1）/">网络</a>
+          </li>
+        
+          <li>
             <a href="/2018/04/27/线程（3）/">线程（3）</a>
           </li>
         
@@ -831,10 +815,6 @@ rm -rf /swapfile
         
           <li>
             <a href="/2018/04/25/Building-C-Projects/">Building C Projects</a>
-          </li>
-        
-          <li>
-            <a href="/2018/04/25/面试复习（2）/">面试复习（2）</a>
           </li>
         
       </ul>

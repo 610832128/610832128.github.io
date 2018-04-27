@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="小白拜拜拜">
 <meta property="og:description" content="线程间的通信机制-信号量引例（生产者消费者问题）Producer: 生产者，每个几秒生成一个物品，并放入缓冲区中。Consumer: 消费者，一旦发现缓冲区里有物品即可取走。一个读一个写。如何能保证即时取走？ 轮询机制Consumer线程不知道何时有物品可以取，只是不停地去查询（比如每隔50ms查询一次，以便及时取走）轮询的间隔不能太大，否则缓冲区可能已经堆积如山了。主要代码如下：12345678">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-04-27T09:05:05.337Z">
+<meta property="og:updated_time" content="2018-04-27T09:08:56.002Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="线程（3）">
 <meta name="twitter:description" content="线程间的通信机制-信号量引例（生产者消费者问题）Producer: 生产者，每个几秒生成一个物品，并放入缓冲区中。Consumer: 消费者，一旦发现缓冲区里有物品即可取走。一个读一个写。如何能保证即时取走？ 轮询机制Consumer线程不知道何时有物品可以取，只是不停地去查询（比如每隔50ms查询一次，以便及时取走）轮询的间隔不能太大，否则缓冲区可能已经堆积如山了。主要代码如下：12345678">
@@ -96,12 +96,12 @@
 <p>使用信号量机制的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">queue</span>&lt;<span class="keyword">int</span>&gt; q;</span><br><span class="line">OS_Mutex g_mutex;</span><br><span class="line"><span class="function">OS_Semaphore <span class="title">g_sem</span><span class="params">(<span class="number">0</span>)</span></span>; <span class="comment">//将初始信号量设置为0</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Producer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">int</span> r = rand() % <span class="number">20</span> + <span class="number">1</span>;</span><br><span class="line">            q.push(r);</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"放入物品："</span> &lt;&lt; r &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">            g_sem.Post();</span><br><span class="line">            Msleep(r * <span class="number">50</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Consumer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">            g_sem.Wait();</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">while</span>(!q.empty())</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">int</span> tmp = q.front();</span><br><span class="line">                q.pop();</span><br><span class="line">                <span class="built_in">cout</span> &lt;&lt; <span class="string">"取出物品："</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>可以根据实际情况，将信号量的值初始化为<code>0</code>或其他正数，一般情况信号量的初始值由你的实现应用中对应的那个量决定，比如，缓冲区中的物品数量：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">OS_Semaphore g_sem(0);</span><br><span class="line">OS_Semaphore g_sem(10); //已经有了10个量</span><br></pre></td></tr></table></figure></p>
 <h6 id="超时等待机制"><a href="#超时等待机制" class="headerlink" title="超时等待机制"></a>超时等待机制</h6><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> ret = g_sem.Wait(<span class="number">1000</span>); <span class="comment">//ms</span></span><br><span class="line"><span class="keyword">if</span>(ret != <span class="number">0</span>) <span class="comment">//如果返回值不为0，表明已经超时</span></span><br><span class="line">&#123;<span class="comment">//超时处理&#125;</span></span><br></pre></td></tr></table></figure>
-<p><code>osapi</code>中超时处理的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> OS_Semaphore::Wait(<span class="keyword">int</span> ms)</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    timeval tv_now;</span><br><span class="line">    gettimeofday(&amp;tv_now, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    timespec ts;</span><br><span class="line">    ts.tv_sec = tv_now.tv_sec;</span><br><span class="line">    ts.tv_nsec = tv_now.tv_usec * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> ns = ts.tv_nsec + (ms % <span class="number">1000</span>)  * <span class="number">1000000</span>;</span><br><span class="line">    ts.tv_nsec = ns % <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ns / <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ms / <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sem_timedwait(&amp;priv-&gt;hSem, &amp;ts) != <span class="number">0</span>)</span><br><span class="line">    &#123;   </span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>osapi</code>中超时处理的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> OS_Semaphore::Wait(<span class="keyword">int</span> ms)</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    timeval tv_now;</span><br><span class="line">    gettimeofday(&amp;tv_now, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    timespec ts;</span><br><span class="line">    ts.tv_sec = tv_now.tv_sec;</span><br><span class="line">    ts.tv_nsec = tv_now.tv_usec * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> ns = ts.tv_nsec + (ms % <span class="number">1000</span>)  * <span class="number">1000000</span>;</span><br><span class="line">    ts.tv_nsec = ns % <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ns / <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ms / <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sem_timedwait(&amp;priv-&gt;hSem, &amp;ts) != <span class="number">0</span>)</span><br><span class="line">    &#123;   </span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjghqen9k000endqwncip5bhv" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjgi1qknd000eprqwmx57vxc6" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -111,6 +111,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2018/04/27/网络（1）/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Neuer</strong>
+      <div class="article-nav-title">
+        
+          网络
+        
+      </div>
+    </a>
   
   
     <a href="/2018/04/27/线程（2）/" id="article-nav-older" class="article-nav-link-wrap">
@@ -134,7 +143,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
     </div>
   </div>
 
@@ -144,7 +153,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 10px;">网络</a>
     </div>
   </div>
 
@@ -166,6 +175,10 @@
       <ul>
         
           <li>
+            <a href="/2018/04/27/网络（1）/">网络</a>
+          </li>
+        
+          <li>
             <a href="/2018/04/27/线程（3）/">线程（3）</a>
           </li>
         
@@ -179,10 +192,6 @@
         
           <li>
             <a href="/2018/04/25/Building-C-Projects/">Building C Projects</a>
-          </li>
-        
-          <li>
-            <a href="/2018/04/25/面试复习（2）/">面试复习（2）</a>
           </li>
         
       </ul>

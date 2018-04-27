@@ -62,6 +62,88 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-LLVM学习（1）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/03/30/LLVM学习（1）/" class="article-date">
+  <time datetime="2018-03-30T02:06:15.000Z" itemprop="datePublished">2018-03-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/03/30/LLVM学习（1）/">LLVM学习（1）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>实验室可能要接一个对线程伪共享进行检测和优化的项目，其中一些方法要基于LLVM这个框架实现，所以自己开始研究LLVM。</p>
+<p>LLVM（low level virtual machine）是一个编译器框架，最早是Illinois的一个研究项目，它的主要作用是可以作为多种语言的后端，它可以提供与可编程语言无关的优化和针对很多种CPU的代码生成功能，llvm目前也不仅仅是一个框架，它还包含了很多子项目，比如clang。LLVM的优点是开源，同时他有一个表达形式很好的IR语言。</p>
+<p>我的操作系统是cento OS，官方是使用svn进行版本控制的，可以通过SVN获取源码，安装过程中要用到cmake命令，并且要求cmake版本在3.4以上，直接使用<code>yum install cmake</code>命令安装的版本是不满足要求的。</p>
+<p>libc++是针对Clang开发的C++标准库，包含了对C++11的完整支持，其与clang的关系就行libstdc++与GCC的关系。</p>
+<h2 id="下载源码"><a href="#下载源码" class="headerlink" title="下载源码"></a>下载源码</h2><p>下载步骤如下，要注意目录结构：</p>
+<pre><code>#下载llvm
+mdkir LC
+cd LC
+svn co http://llvm.org/svn/llvm-project/llvm/trunk llvm
+#下载clang
+cd llvm/tools
+svn co http://llvm.org/svn/llvm-project/cfe/trunk clang
+#下载Compiler-RT
+cd llvm/project
+svn co http://llvm.org/svn/llvm-project/compiler-rt/trunk compiler-rt
+#下载标准库libcxx和libcxxabi
+svn co http://llvm.org/svn/llvm-project/libcxx/trunk libcxx
+svn co http://llvm.org/svn/llvm-project/libcxxabi/trunk libcxxabi
+</code></pre><h2 id="编译安装"><a href="#编译安装" class="headerlink" title="编译安装"></a>编译安装</h2><p>LLVM进制源码内编译（in-tree build is not supposed）， 因此我们需要在源码目录外新建目录来存放编译后的文件。新建build目录并进入目录，使用cmake得到Makefile文件，然后使用make进行编译，<strong>-G “Unix Makefiles”</strong> 表示要使用cmake工具得到Unix安装环境下的Makefile。LLVM支持并行编译，make -j2代表着同时在两个核上进行并行编译，最后使用make install进行安装。</p>
+<pre><code>cd..
+mkdir build
+cd build
+cmake -G &quot;Unix Makefiles&quot; -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD=&quot;X86&quot; ../llvm
+make -j2
+sudo make install
+</code></pre><h2 id="C-internal-compiler-error-Killed-program-cc1plus-错误解决方法"><a href="#C-internal-compiler-error-Killed-program-cc1plus-错误解决方法" class="headerlink" title="C++: internal compiler error: Killed(program cc1plus)错误解决方法"></a>C++: internal compiler error: Killed(program cc1plus)错误解决方法</h2><p>如果编译的机器内存较小，可能会出现上述错误，这时可以通过创建交换空间来解决，Linux将随机存储RAM称为内存页。交换技术就是将一页内存复制到预先设定的硬盘上的交换空间，从而释放内存。物理内存和交换空间的和就是可提供的虚拟空间的总量。</p>
+<p>当系统需要的内存量比物理内存更大时，系统内核可以把较少使用的内存页写到交换空间，把空闲出来的内存给当前应用程序（进程）使用。一个应用启动时使用的内存页可能只有启动时会用到，操作系统可以把这部分内存页写入交换空间。</p>
+<p>但是交换空间技术也有负面因素，因为相对于内存磁盘读写的速度很慢，内存读写速度为纳秒级，但是硬盘速度为毫秒级。所以发生的交换越多，系统运行的速度就越慢。</p>
+<p>Linux有两种形式的交换空间：交换分区和交换文件。交换分区是一个独立的硬盘，没有文件等内容。交换文件是文件系统中的特殊文件，独立于系统和数据文件之外。 可以使用<code>swapon -s</code>来查看swap空间。</p>
+<p>针对本文中的问题,可以通过下面方式解决：</p>
+<pre><code>#创建空文件，if输入 of输出 bs块大小 count总大小
+dd if=/dev/zero of=/swapfile bs=1024 count=1024000
+#swapfile是交换文件的名字，准备交换文件使用mkswap命令
+mkswap /swapfile是交换文件的名字
+#挂载文件
+swapon /swapfile
+</code></pre><p>可以通过<code>free -m</code>查看是否生效，通过下图可以看到交换文件创建成功。</p>
+<p><img src="/images/free-m.png" alt=""></p>
+<p>创建完毕后可以重新<code>make</code>一下，应该可以顺利完成了。之后可以将交换文件删除，删除的命令如下：</p>
+<pre><code>#首先停止swap分区
+swapoff /swapfile是交换文件的名字
+#删除swap分区文件
+rm -rf /swapfile
+</code></pre><p>最后可以通过<code>clang --version</code>和<code>llvm-config --version</code>查看LLVM和clang是否安装成功。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjgi1qkmu0004prqw7mx6slsw" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-P、NP、NP-hard、NPC问题" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/03/13/P、NP、NP-hard、NPC问题/" class="article-date">
@@ -95,7 +177,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjghqen9b0009ndqwyvtv1upn" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjgi1qkn10009prqww80geydp" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -135,7 +217,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjghqen8l0002ndqwzi5igadh" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjgi1qkmg0002prqw2f8k4xon" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -163,7 +245,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
     </div>
   </div>
 
@@ -173,7 +255,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 10px;">网络</a>
     </div>
   </div>
 
@@ -195,6 +277,10 @@
       <ul>
         
           <li>
+            <a href="/2018/04/27/网络（1）/">网络</a>
+          </li>
+        
+          <li>
             <a href="/2018/04/27/线程（3）/">线程（3）</a>
           </li>
         
@@ -208,10 +294,6 @@
         
           <li>
             <a href="/2018/04/25/Building-C-Projects/">Building C Projects</a>
-          </li>
-        
-          <li>
-            <a href="/2018/04/25/面试复习（2）/">面试复习（2）</a>
           </li>
         
       </ul>
