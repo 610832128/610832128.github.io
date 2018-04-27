@@ -127,7 +127,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjghau9yf000a3wqwnpjsjfv6" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjghawdrc000agbqwf5cp5szv" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -177,8 +177,8 @@
 <li>包生成（Package generation）</li>
 <li>动态链接（Dynamic linking）<br>主要过程如上所示，实际上C不一定要按照上述步骤构建。如果按部就班的讲解很难描述清楚，因为有些步骤是接下来一些步骤的准备，很容易让人迷惑，所以从第6部开始慢慢延伸。</li>
 </ol>
-<h6 id="6：-Preprocessing"><a href="#6：-Preprocessing" class="headerlink" title="6： Preprocessing"></a>6： Preprocessing</h6><p>使用下面的c程序作为示例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    fputs(&quot;Hello, world!\n&quot;, stdout);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>现在我们首先要关注第一行<code>#include&lt;stdio.h&gt;</code>，一个常见的误解是这行程序与一些库有关系，它将fputs的定义与库中的程序联系在一起。实际上这行代码只是告诉编译器fputs和stdout所拥有的类型，等同于下面代码（省略了很多不相关的代码）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">struct foo;</span><br><span class="line">typedef struct foo FILE;</span><br><span class="line"></span><br><span class="line">extern int fputs(const char *, FILE *);</span><br><span class="line">extern FILE *stdout;</span><br><span class="line"></span><br><span class="line">int main(void)</span><br><span class="line">&#123;</span><br><span class="line">    fputs(&quot;Hello, world!\n&quot;, stdout);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h6 id="6：-Preprocessing"><a href="#6：-Preprocessing" class="headerlink" title="6： Preprocessing"></a>6： Preprocessing</h6><p>使用下面的c程序作为示例：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">fputs</span>(<span class="string">"Hello, world!\n"</span>, <span class="built_in">stdout</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>现在我们首先要关注第一行<code>#include&lt;stdio.h&gt;</code>，一个常见的误解是这行程序与一些库有关系，它将fputs的定义与库中的程序联系在一起。实际上这行代码只是告诉编译器fputs和stdout所拥有的类型，等同于下面代码（省略了很多不相关的代码）：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">foo</span>;</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">foo</span> <span class="title">FILE</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">extern</span> <span class="keyword">int</span> <span class="title">fputs</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *, FILE *)</span></span>;</span><br><span class="line"><span class="keyword">extern</span> FILE *<span class="built_in">stdout</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">fputs</span>(<span class="string">"Hello, world!\n"</span>, <span class="built_in">stdout</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>实际上与链接没有关系，stdio.h只是一些类型、函数、变量和宏定义的声明列表。C标准对于编译器如何实现这些定义没有任何限制，但实际上，类似stdio.h这样的头文件几乎都由轻量扩展的C程序实现。在这个例子中FILE是一个不完全的类型，extern意味着只是一个声明，不一定包含函数或变量的定义。<br><br>预处理同时会移除源文件中的注释。如今，预处理阶段经常与编译阶段同时进行，但是预处理阶段也是可以单独进行的，使用-E指令进行预处理操作，预处理后的文件后缀为.i。</p>
 <h6 id="5：Header-precomplition"><a href="#5：Header-precomplition" class="headerlink" title="5：Header precomplition"></a>5：Header precomplition</h6><p>不同的源码文件可能引用同一个头文件（比如stdio.h）。编译的时候，头文件也必须一起编译，为了节省时间，并且如果头文件的声明有错误，每个包含该头文件的程序都会出现相同错误，无论是否与这个错误相关联，编译器会在编译源码之前，先编译头文件。这保证头文件只需要编译一次，不过并不是头文件的所有内容都会被预编译。例如用来声明宏的#define指令，就不会被预编译。</p>
 <h6 id="4：Header-file-location"><a href="#4：Header-file-location" class="headerlink" title="4：Header file location"></a>4：Header file location</h6><p>为了能够包含头文件，必须能够在文件系统中找到，大多数预处理使用的方法都很简单，可以使用一个硬编码的目录列表，用户可以将其添加到目录中，预处理时会按照顺序进行扫描，知道找到正在查找的文件。<br><br>当项目较大时，也可以通过扫描经过适当命名的头文件资源树，然后通过比较路径（根据目录结构采用最接近的匹配头文件）来计算出哪个头文件是预期的。当使用分层构建时，项目的不同部分必须放置在不同的目录中，采用这种方法使较为明智的。</p>
@@ -199,7 +199,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjghau9x600003wqwwetmpur6" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjghawdq20000gbqwqi78nyw3" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -239,7 +239,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjghau9yo000e3wqwowre4fe7" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjghawdrm000egbqw1paojda0" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -302,7 +302,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjghau9yb00063wqwa7ez974x" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjghawdr80006gbqw4ndp9l4k" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -351,7 +351,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjghau9y800053wqwlnw5jojy" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjghawdr50005gbqw1o5xd7oc" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -433,7 +433,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjghau9yn000c3wqwjgsb96ih" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjghawdrl000cgbqwkoarrqmp" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -554,7 +554,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjghau9xg00013wqwjsy4l6q3" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjghawdqd0001gbqwwrebohcy" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HSI/">HSI</a></li></ul>
@@ -636,7 +636,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjghau9xz00043wqw8r13ixt4" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjghawdqw0004gbqwyjgitcqe" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -681,7 +681,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjghau9yd00093wqwtr0xaa5l" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjghawdra0009gbqwlsxyobyq" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -721,7 +721,7 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjghau9xr00023wqwsnx6v81l" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/13/HelloWorld/" data-id="cjghawdqo0002gbqwcvax930m" class="article-share-link">Teilen</a>
       
       
     </footer>
