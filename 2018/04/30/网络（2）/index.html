@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="小白拜拜拜">
 <meta property="og:description" content="网络字节序按照字节传输网络上的数据是一个字节一个字节串行传递的。12char buf[] = &quot;hello&quot;;sock.SendTo(buf, 5, ...) 那么在信道中依次传输5个字节：68 65 6c 6c 6f。 大端与小端当观察到一个unsigned int型变量的内存,unsigned int a = 0x12345678;在内存中的排列为78 56 34 12，却不是12 34 56">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-04-30T04:14:02.575Z">
+<meta property="og:updated_time" content="2018-04-30T08:07:07.430Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="网络（2）">
 <meta name="twitter:description" content="网络字节序按照字节传输网络上的数据是一个字节一个字节串行传递的。12char buf[] = &quot;hello&quot;;sock.SendTo(buf, 5, ...) 那么在信道中依次传输5个字节：68 65 6c 6c 6f。 大端与小端当观察到一个unsigned int型变量的内存,unsigned int a = 0x12345678;在内存中的排列为78 56 34 12，却不是12 34 56">
@@ -54,9 +54,9 @@
       </nav>
       <nav id="sub-nav">
         
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS"></a>
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Buscar"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
@@ -104,11 +104,28 @@
 </ol>
 <h6 id="非阻塞模式"><a href="#非阻塞模式" class="headerlink" title="非阻塞模式"></a>非阻塞模式</h6><p>不管有没有数据，函数都立即返回，如果有数据，则返回值<code>&gt;0</code>，如果没有数据，则返回值为<code>-1</code>。此时，需要程序定时的去调用<code>RecvFrom</code>函数去查看有没有数据，这种设计模式叫做“轮询”。</p>
 <h4 id="双工通讯"><a href="#双工通讯" class="headerlink" title="双工通讯"></a>双工通讯</h4><p><strong>单工</strong>：单向通信，A只能发信号，B只能接收信号，通信是单向的。（广播、电视）<br><strong>半双工</strong>： 双向通信但是不能同时进行，A能发信号给B，B也能发信号给A，但这两个过程不能同时进行。（要么上行（上传），要么下行（下载），比如对讲机）<br><strong>全双工</strong>：双向通信互不影响，A给B发信号的同时，B也可以给A发信号。（上行下行可同时进行，手机、电话）<br><code>UDP</code>是双工的。可以使用多线程的方式实现全双工操作，一个线程负责读，另一个线程负责写。主要代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//发送线程</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Send</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        OS_UdpSocket sock;</span><br><span class="line">        sock.Open();</span><br><span class="line">        <span class="function">OS_SockAddr <span class="title">peer</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9001</span>)</span></span>;</span><br><span class="line">        <span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">cin</span> &gt;&gt; buf;</span><br><span class="line">            <span class="keyword">int</span> len = <span class="built_in">strlen</span>(buf);</span><br><span class="line">            sock.SendTo(buf, len, peer);</span><br><span class="line">            <span class="keyword">if</span>(<span class="built_in">strcmp</span>(buf, <span class="string">"bye"</span>) == <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        sock.Close();</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Recv</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        OS_UdpSocket sock;</span><br><span class="line">        sock.Open(OS_SockAddr(<span class="string">"127.0.0.1"</span>, <span class="number">9000</span>), ture);</span><br><span class="line">        OS_SockAddr peer;</span><br><span class="line">        <span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">int</span> n = sock.RecvFrom(buf, <span class="number">128</span>, peer);</span><br><span class="line">            <span class="keyword">if</span>(n &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            buf[n] = <span class="number">0</span>;</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; buf &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        sock.Close();</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h4 id="通信协议"><a href="#通信协议" class="headerlink" title="通信协议"></a>通信协议</h4><p>协议，<code>protocal</code>，协议就是规定，是通信双方事先协商好的规则。它规定了数据的格式。没有协议，就无法实现数据的传输（对方读不懂）。<br>当要传递一个整数<code>0x12345678</code>给对方时，可以有多种方式。</p>
+<ol>
+<li>大端，按字节，<code>12 34 56 78</code>。</li>
+<li>小端，按字节，<code>78 56 34 12</code>。</li>
+<li>文本，十六进制， “<code>12345678</code>“（共八个字节）。</li>
+<li>文本, 十进制，”<code>305419896</code>“（共九个字节）。<br>双方协商好按格式1进行传输，这便是协议。</li>
+</ol>
+<h5 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h5><p>通过<code>UDP</code>传输，A发送B一个文件，协议如下：</p>
+<ol>
+<li>把文件分块传输，每块最大1024个字节。</li>
+<li>数据包格式，前16字节表示指令<br> 01 开始传送 02 数据包 FF 结束传送</li>
+</ol>
+<p>主要代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//发送端</span></span><br><span class="line">OS_UdpSocket sock;</span><br><span class="line">sock.Open();</span><br><span class="line">File *fp = fopen(<span class="string">"123.tar"</span>, <span class="string">"rb"</span>);</span><br><span class="line"><span class="function">OS_SockAddr <span class="title">peer</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9001</span>)</span></span>;</span><br><span class="line">OS_SockAddr local;</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="string">"please input enter: "</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">getchar();</span><br><span class="line">buf[<span class="number">0</span>] = <span class="number">0x01</span>;</span><br><span class="line">sock.SendTo(buf, <span class="number">16</span>, peer);</span><br><span class="line"><span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> n = fread(buf + <span class="number">16</span>, <span class="number">1</span>, <span class="number">1024</span>, fp);</span><br><span class="line">    <span class="keyword">if</span>(n &lt;= <span class="number">0</span>) <span class="keyword">break</span>;</span><br><span class="line">    buf[<span class="number">0</span>] = <span class="number">0x02</span>;</span><br><span class="line">    sock.SendTo(buf, n + <span class="number">16</span>, peer);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"send data packet, count = "</span> &lt;&lt; count &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    count++;</span><br><span class="line">&#125;</span><br><span class="line">buf[<span class="number">0</span>] = <span class="number">0xFF</span>;</span><br><span class="line">sock.SendTo(buf, <span class="number">16</span>, peer);</span><br><span class="line">sock.Close();</span><br><span class="line"></span><br><span class="line"><span class="comment">//接收方</span></span><br><span class="line"><span class="function">OS_SockAddr <span class="title">local</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9001</span>)</span></span>;</span><br><span class="line">OS_UdpSocket sock;</span><br><span class="line">sock.Open(local, <span class="literal">true</span>);</span><br><span class="line">OS_SockAddr peer;</span><br><span class="line"><span class="keyword">unsigned</span> <span class="keyword">char</span> buf[<span class="number">1024</span> + <span class="number">16</span>];</span><br><span class="line">FILE* fp = fopen(<span class="string">"456.tar"</span>, <span class="string">"wb"</span>);</span><br><span class="line"><span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> n = sock.RecvFrom(buf, <span class="number">1024</span> + <span class="number">16</span>; peer);</span><br><span class="line">    <span class="keyword">if</span>(buf[<span class="number">0</span>] == <span class="number">0x01</span>)</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"connection start"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(buf[<span class="number">0</span>] == <span class="number">0xFF</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"connection end"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        fwrite(buf + <span class="number">16</span>, <span class="number">1</span>, <span class="number">1024</span>, fp);</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"receive packet, count = "</span> &lt;&lt; count &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        count++;</span><br><span class="line">    &#125;</span><br><span class="line">    sock.Close();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="强化协议，减少丢包不怕丢包"><a href="#强化协议，减少丢包不怕丢包" class="headerlink" title="强化协议，减少丢包不怕丢包"></a>强化协议，减少丢包不怕丢包</h5><ol>
+<li>A控制发送节奏，不要太快。使用线程的<code>sleep</code>函数。</li>
+<li>确定应答模式，接收到应答后才发下一个包。</li>
+</ol>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjglqbwvc000efdqw0564az8j" class="article-share-link">Compartir</a>
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjglynp72000i6tqwzs8udole" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -121,7 +138,7 @@
   
   
     <a href="/2018/04/27/网络（1）/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Viejo</strong>
+      <strong class="article-nav-caption">Älter</strong>
       <div class="article-nav-title">网络（1）</div>
     </a>
   
@@ -149,7 +166,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Nube de Tags</h3>
+    <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
       <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 15px;">网络</a>
     </div>
@@ -158,7 +175,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Archivos</h3>
+    <h3 class="widget-title">Archiv</h3>
     <div class="widget">
       <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
     </div>
@@ -168,7 +185,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Posts recientes</h3>
+    <h3 class="widget-title">letzter Beitrag</h3>
     <div class="widget">
       <ul>
         
