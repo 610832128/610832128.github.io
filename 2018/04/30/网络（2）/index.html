@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>网络（2） | 小白拜拜拜</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="网络字节序按照字节传输网络上的数据是一个字节一个字节串行传递的。12char buf[] = &quot;hello&quot;;sock.SendTo(buf, 5, ...) 那么在信道中依次传输5个字节：68 65 6c 6c 6f。 大端与小端当观察到一个unsigned int型变量的内存,unsigned int a = 0x12345678;在内存中的排列为78 56 34 12，却不是12 34 56">
+<meta name="keywords" content="网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网络（2）">
+<meta property="og:url" content="http://yoursite.com/2018/04/30/网络（2）/index.html">
+<meta property="og:site_name" content="小白拜拜拜">
+<meta property="og:description" content="网络字节序按照字节传输网络上的数据是一个字节一个字节串行传递的。12char buf[] = &quot;hello&quot;;sock.SendTo(buf, 5, ...) 那么在信道中依次传输5个字节：68 65 6c 6c 6f。 大端与小端当观察到一个unsigned int型变量的内存,unsigned int a = 0x12345678;在内存中的排列为78 56 34 12，却不是12 34 56">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-04-30T04:14:02.575Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="网络（2）">
+<meta name="twitter:description" content="网络字节序按照字节传输网络上的数据是一个字节一个字节串行传递的。12char buf[] = &quot;hello&quot;;sock.SendTo(buf, 5, ...) 那么在信道中依次传输5个字节：68 65 6c 6c 6f。 大端与小端当观察到一个unsigned int型变量的内存,unsigned int a = 0x12345678;在内存中的排列为78 56 34 12，却不是12 34 56">
+  
+    <link rel="alternate" href="/atom.xml" title="小白拜拜拜" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">小白拜拜拜</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Buscar"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-网络（2）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/30/网络（2）/" class="article-date">
+  <time datetime="2018-04-30T04:13:32.000Z" itemprop="datePublished">2018-04-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      网络（2）
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="网络字节序"><a href="#网络字节序" class="headerlink" title="网络字节序"></a>网络字节序</h4><h5 id="按照字节传输"><a href="#按照字节传输" class="headerlink" title="按照字节传输"></a>按照字节传输</h5><p>网络上的数据是一个字节一个字节串行传递的。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> buf[] = <span class="string">"hello"</span>;</span><br><span class="line">sock.SendTo(buf, <span class="number">5</span>, ...)</span><br></pre></td></tr></table></figure></p>
+<p>那么在信道中依次传输5个字节：<code>68 65 6c 6c 6f</code>。</p>
+<h5 id="大端与小端"><a href="#大端与小端" class="headerlink" title="大端与小端"></a>大端与小端</h5><p>当观察到一个<code>unsigned int</code>型变量的内存,<code>unsigned int a = 0x12345678;</code><br>在内存中的排列为<code>78 56 34 12</code>，却不是<code>12 34 56 78</code>，原因是因为这是一种规定。<br>小端：低位字节在内存的低地址端，高位字节在内存的高地址端。主流系统都是小端的（<code>intel/amd</code>）<br>大端：低位字节在内存的高地址端，高位字节在内存的低地址端。</p>
+<h5 id="网络传输字节序"><a href="#网络传输字节序" class="headerlink" title="网络传输字节序"></a>网络传输字节序</h5><p>网络传输的时候，惯例是按照大端传输的。即把接收到的第一个字节当做高位字节看待，这就要求发送端发送的第一个字节是高位字节，而在发送端发送数据时，发送的第一个字节应该是数值在内存中的起始地址对应的那个字节（即高位字节存放在低地址），将小端转换为大端：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">itob_32be</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> a, <span class="keyword">unsigned</span> <span class="keyword">char</span> bytes[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    bytes[<span class="number">0</span>] = (<span class="keyword">unsigned</span> <span class="keyword">char</span>)(a &gt;&gt; <span class="number">24</span>);</span><br><span class="line">    bytes[<span class="number">1</span>] = (<span class="keyword">unsigned</span> <span class="keyword">char</span>)(a &gt;&gt; <span class="number">16</span>);</span><br><span class="line">    bytes[<span class="number">2</span>] = (<span class="keyword">unsigned</span> <span class="keyword">char</span>)(a &gt;&gt; <span class="number">8</span>);</span><br><span class="line">    bytes[<span class="number">3</span>] = (<span class="keyword">unsigned</span> <span class="keyword">char</span>)(a);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="更多细节"><a href="#更多细节" class="headerlink" title="更多细节"></a>更多细节</h4><h5 id="默认分配端口号"><a href="#默认分配端口号" class="headerlink" title="默认分配端口号"></a>默认分配端口号</h5><p>发送方<code>Socket</code>可以不显式的指定端口号：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">UdpSocket sock;</span><br><span class="line">sock.open(); <span class="comment">//不带地址</span></span><br><span class="line">sock.SendTo(); <span class="comment">//发送数据</span></span><br></pre></td></tr></table></figure></p>
+<p><code>SendTo</code>函数被调用时，<code>OS</code>发现这个<code>Socket</code>还没有分配端口号，于是立即为其自动分配一个端口号，然后进行发送，接收方必须指定端口号的，发送方自动分配的端口号有一个区间，一般在<code>10000</code>以上。可以通过以下方式查看：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">OS_SockAddr local;</span><br><span class="line">sock.GetLocalAddr(local);</span><br><span class="line"><span class="keyword">unsigned</span> <span class="keyword">int</span> port = local.GetPort();</span><br><span class="line"><span class="built_in">printf</span>(<span class="string">"local port: %d \n"</span>, port);</span><br><span class="line"><span class="comment">//在发送数据时，才会自动分配端口</span></span><br></pre></td></tr></table></figure></p>
+<h5 id="端口的占用"><a href="#端口的占用" class="headerlink" title="端口的占用"></a>端口的占用</h5><p>当一个<code>Socket</code>使用了某个端口，那么直到这个<code>Socket</code>被关闭，这个端口都处于被占用的状态。如果还想创建一个<code>Socket</code>，并且使用相同的端口，则创建失败。<code>sock.open()</code>返回-1。所以将端口号设置为可重用的。<code>sock.open</code>第二个参数即是能否重用的选项（内部间接调用了<code>SetOpt_ReuseAddr</code>这个函数）。一般要设置为<code>true</code>，因为有时候程序会意外关闭，即时重新启动当操作系统还没有释放这个端口时，会出现错误。</p>
+<h5 id="多个发送方，一个接收方"><a href="#多个发送方，一个接收方" class="headerlink" title="多个发送方，一个接收方"></a>多个发送方，一个接收方</h5><p>接收方可以区分一个消息是谁发送的：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line">OS_SockAddr peer;</span><br><span class="line"><span class="keyword">int</span> n = sock.RecvFrom(buf, <span class="number">128</span>, peer);</span><br></pre></td></tr></table></figure></p>
+<p><code>RecvFrom</code>只是从“接受缓冲区”里取出一个数据包，这个数据包本身是带有源地址的。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">string</span> peer_ip = peer.GetIp_str();</span><br><span class="line"><span class="keyword">int</span> peer_port = peer.GetPort();</span><br></pre></td></tr></table></figure></p>
+<h5 id="阻塞与超时"><a href="#阻塞与超时" class="headerlink" title="阻塞与超时"></a>阻塞与超时</h5><h6 id="阻塞模式"><a href="#阻塞模式" class="headerlink" title="阻塞模式"></a>阻塞模式</h6><p>接收方<code>sock.RecvFrom</code>：</p>
+<ol>
+<li>如果<code>RecvBuf</code>中有数据，则函数立即返回。</li>
+<li>如果没有数据，则函数会一直等待，知道有数据时才取出数据，这个等待行为就是“阻塞”方式，可以设置最大等待时间，超过后如果仍然没有数据，函数返回-1。<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sock.SetOpt_RecvTimeOut(<span class="number">3000</span>) <span class="comment">//超过3s仍无数据，则RecvFrom返回-1</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h6 id="非阻塞模式"><a href="#非阻塞模式" class="headerlink" title="非阻塞模式"></a>非阻塞模式</h6><p>不管有没有数据，函数都立即返回，如果有数据，则返回值<code>&gt;0</code>，如果没有数据，则返回值为<code>-1</code>。此时，需要程序定时的去调用<code>RecvFrom</code>函数去查看有没有数据，这种设计模式叫做“轮询”。</p>
+<h4 id="双工通讯"><a href="#双工通讯" class="headerlink" title="双工通讯"></a>双工通讯</h4><p><strong>单工</strong>：单向通信，A只能发信号，B只能接收信号，通信是单向的。（广播、电视）<br><strong>半双工</strong>： 双向通信但是不能同时进行，A能发信号给B，B也能发信号给A，但这两个过程不能同时进行。（要么上行（上传），要么下行（下载），比如对讲机）<br><strong>全双工</strong>：双向通信互不影响，A给B发信号的同时，B也可以给A发信号。（上行下行可同时进行，手机、电话）<br><code>UDP</code>是双工的。可以使用多线程的方式实现全双工操作，一个线程负责读，另一个线程负责写。主要代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//发送线程</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Send</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        OS_UdpSocket sock;</span><br><span class="line">        sock.Open();</span><br><span class="line">        <span class="function">OS_SockAddr <span class="title">peer</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9001</span>)</span></span>;</span><br><span class="line">        <span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">cin</span> &gt;&gt; buf;</span><br><span class="line">            <span class="keyword">int</span> len = <span class="built_in">strlen</span>(buf);</span><br><span class="line">            sock.SendTo(buf, len, peer);</span><br><span class="line">            <span class="keyword">if</span>(<span class="built_in">strcmp</span>(buf, <span class="string">"bye"</span>) == <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        sock.Close();</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Recv</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        OS_UdpSocket sock;</span><br><span class="line">        sock.Open(OS_SockAddr(<span class="string">"127.0.0.1"</span>, <span class="number">9000</span>), ture);</span><br><span class="line">        OS_SockAddr peer;</span><br><span class="line">        <span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">int</span> n = sock.RecvFrom(buf, <span class="number">128</span>, peer);</span><br><span class="line">            <span class="keyword">if</span>(n &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            buf[n] = <span class="number">0</span>;</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; buf &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        sock.Close();</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjglqbwvc000efdqw0564az8j" class="article-share-link">Compartir</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2018/04/27/网络（1）/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Viejo</strong>
+      <div class="article-nav-title">网络（1）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Nube de Tags</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 15px;">网络</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archivos</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Posts recientes</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/04/30/网络（2）/">网络（2）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/04/27/网络（1）/">网络（1）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/04/27/线程（3）/">线程（3）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/04/27/线程（2）/">线程（2）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/04/26/线程（1）/">线程（1）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+  </script>
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 小白拜拜拜<br>
+  	  <span id="busuanzi_container_site_pv">
+         本站总访问量<span id="busuanzi_value_site_pv"></span>次
+      </span> 
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
