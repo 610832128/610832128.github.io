@@ -62,6 +62,102 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-网络（3）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/01/网络（3）/" class="article-date">
+  <time datetime="2018-05-01T11:55:20.000Z" itemprop="datePublished">2018-05-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/05/01/网络（3）/">网络（3）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="TCP-Socket"><a href="#TCP-Socket" class="headerlink" title="TCP Socket"></a>TCP Socket</h4><p><code>TCP: Transmission control protocal</code>，传输控制协议，是与<code>UDP</code>并列的两个传输协议。</p>
+<h5 id="C-S设计模式"><a href="#C-S设计模式" class="headerlink" title="C/S设计模式"></a>C/S设计模式</h5><p><code>TCP</code>的设计模式成为<code>C/S</code>，即<code>Client-Server</code>（客户机-服务器）模式（<code>UDP</code>两端是对等的，<code>TCP</code>两端是不对等的，一端称为<code>Client</code>，另一端称为<code>Server</code>）。<br>对于<code>TCP</code>，客户端和服务器的写法是不同的。</p>
+<ol>
+<li>客户端<ol>
+<li>连接服务器<code>connect</code>。</li>
+<li>通讯</li>
+</ol>
+</li>
+<li>服务器<ol>
+<li>主<code>socket</code>接收连接<code>Accept</code>。</li>
+<li>有连接到来时，创建一个<code>Working Socket</code>为<code>Client Socket</code>提供服务。每一个<code>Client</code>都分配一个<code>Socket</code>，专门的一对一的提供服务。</li>
+</ol>
+</li>
+</ol>
+<p>例如：银行服务热线<code>95555</code>，一个客户（<code>Client Socket</code>）拿起电话拨打服务<code>95555</code>，<code>connect(95555)</code>。接通（<code>connected</code>），你的电话转接到一个工作人员（<code>Working Socket</code>）。<br><code>TCP</code>中应该使用多线程技术。</p>
+<h6 id="服务器："><a href="#服务器：" class="headerlink" title="服务器："></a>服务器：</h6><ol>
+<li><code>serv_sock.Open(OS_SockAddr(9555), true);</code></li>
+<li><code>serv_sock.Listen();</code></li>
+<li><code>serv_sock.Accept(&amp;work_set);</code></li>
+</ol>
+<h6 id="客户端："><a href="#客户端：" class="headerlink" title="客户端："></a>客户端：</h6><ol>
+<li><code>Open(), Connect()</code></li>
+<li><code>Send/Recv</code></li>
+</ol>
+<p>代码实例如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//客户端</span></span><br><span class="line">OS_TcpSocket client;</span><br><span class="line">client.Open();</span><br><span class="line"><span class="keyword">const</span> <span class="keyword">char</span> *ip = <span class="string">"127.0.0.1"</span>;</span><br><span class="line"><span class="keyword">int</span> port = <span class="number">8888</span>;</span><br><span class="line"><span class="function">OS_SockAddr <span class="title">peer</span><span class="params">(ip, port)</span></span>;</span><br><span class="line"><span class="keyword">int</span> n = client.Connect(peer);</span><br><span class="line"><span class="keyword">if</span>(n &lt; <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"connection fail!"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> maxLen = <span class="number">1024</span> * <span class="number">16</span>;</span><br><span class="line"><span class="keyword">char</span> *buf = <span class="keyword">new</span> <span class="keyword">char</span>[maxLen];</span><br><span class="line"><span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//gets(buf);</span></span><br><span class="line">    <span class="built_in">cin</span> &gt;&gt; buf;</span><br><span class="line">    <span class="keyword">int</span> len = <span class="built_in">strlen</span>(buf);</span><br><span class="line">    client.Send(buf, len);</span><br><span class="line">    len = client.Recv(buf, maxLen);</span><br><span class="line">    <span class="keyword">if</span>(len &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    buf[len] = <span class="number">0</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; buf &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line">client.Close();</span><br><span class="line"><span class="keyword">delete</span>[] buf;</span><br><span class="line"></span><br><span class="line"><span class="comment">//服务器端，使用了多线程，每次监听到一个连接就新建一个线程</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Work_thread</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	Work_thread(OS_TcpSocket work_sock)</span><br><span class="line">	&#123;</span><br><span class="line">		maxLen = <span class="number">1024</span> * <span class="number">16</span>;</span><br><span class="line">		<span class="keyword">this</span>-&gt;work_sock = work_sock;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	OS_TcpSocket work_sock;</span><br><span class="line">	<span class="keyword">int</span> maxLen;</span><br><span class="line">	<span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">		<span class="keyword">char</span> *buf = <span class="keyword">new</span> <span class="keyword">char</span>[maxLen];</span><br><span class="line">		<span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">int</span> n = work_sock.Recv(buf, maxLen);</span><br><span class="line">			<span class="keyword">if</span>(n &lt; <span class="number">0</span>)</span><br><span class="line">				<span class="keyword">break</span>;</span><br><span class="line">			buf[n] = <span class="number">0</span>;</span><br><span class="line">			<span class="built_in">cout</span> &lt;&lt; buf &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">			<span class="built_in">strcpy</span>(buf, <span class="string">"ok!"</span>);</span><br><span class="line">			<span class="keyword">int</span> len = <span class="built_in">strlen</span>(buf);</span><br><span class="line">			work_sock.Send(buf, len);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">OS_TcpSocket server;</span><br><span class="line">server.Open(OS_SockAddr(<span class="number">8888</span>), <span class="literal">true</span>);</span><br><span class="line">server.Listen();</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="string">"服务器启动"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">    OS_TcpSocket work_set;</span><br><span class="line">    <span class="keyword">int</span> status = server.Accept(&amp;work_set);</span><br><span class="line">    <span class="keyword">if</span>(status &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    Work_thread* conn = <span class="keyword">new</span> Work_thread(work_set);</span><br><span class="line">    conn-&gt;Run();</span><br><span class="line">    <span class="comment">//Work_thread conn(work_set); conn.Run(); 这样会报错，还不清楚原因</span></span><br><span class="line">&#125;</span><br><span class="line">server.Close();</span><br></pre></td></tr></table></figure></p>
+<h5 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h5><ol>
+<li>请求应答模式，一般情况下，需要客户端发起一个请求，然后服务器做出针对性的应答。</li>
+<li>服务器应该处于常开状态，服务器应该保持一直运行，随时等到客户端发送请求。</li>
+<li><code>Send/Recv</code>不需要再指定目标地址，因为在<code>Connect</code>成功之后，<code>Client</code>和服务器的某个<code>Working Socket</code>已经配对，是一对一的进行通话。</li>
+<li>服务器一般只需要指定端口号。<code>OS_SockAddr(9555)</code>相当于<code>OS_SockAddr(&quot;0000&quot;</code> <code>, 9555)</code>。</li>
+</ol>
+<h4 id="TCP内部缓冲区"><a href="#TCP内部缓冲区" class="headerlink" title="TCP内部缓冲区"></a>TCP内部缓冲区</h4><p><code>UDP Socket</code>的缓冲区：包式存取，每个包带地址。<br><code>TCP Socket</code>的缓冲区：流式存取，每个包不带地址。分界是自由的。例如两次发送<code>&quot;hello&quot;</code>和<code>&quot;world&quot;</code>，服务可能一次就输出了<code>helloworld</code>。</p>
+<h5 id="定义边界"><a href="#定义边界" class="headerlink" title="定义边界"></a>定义边界</h5><p>设计交互协议时，要自己定义消息的边界。<code>a-&gt;b(请求) a&lt;-b(应答) a-&gt;b(请求) a&lt;-b(应答)</code>，有两种方法：</p>
+<ol>
+<li>先发长度，后发数据<code>00 05 &#39;h&#39; &#39;e&#39; &#39;l&#39; &#39;l&#39; &#39;o&#39;</code></li>
+<li>每段消息加上结束符(结束符不属于正文)，<code>hello\r\n</code><br>主要代码如下：</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">buf = getBuf(work_sock, <span class="number">2</span>);  <span class="comment">//获取数据长度</span></span><br><span class="line"><span class="keyword">unsigned</span> <span class="keyword">short</span> num = cTos(buf);</span><br><span class="line">buf = getBuf(work_sock, num); <span class="comment">//根据长度获取数据</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">unsigned</span> <span class="keyword">char</span>* <span class="title">getBuf</span><span class="params">(OS_TcpSocket sock, <span class="keyword">unsigned</span> <span class="keyword">short</span> num)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">unsigned</span> <span class="keyword">char</span>* buf = <span class="keyword">new</span> <span class="keyword">unsigned</span> <span class="keyword">char</span>[num];</span><br><span class="line">	<span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">while</span>(count &lt; num)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">int</span> n = sock.Recv(buf + count, num - count);</span><br><span class="line">		<span class="keyword">if</span>(n &lt;= <span class="number">0</span>)</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		count += n;</span><br><span class="line">	&#125;</span><br><span class="line">	buf[num] = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">return</span> buf;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="阻塞"><a href="#阻塞" class="headerlink" title="阻塞"></a>阻塞</h5><ol>
+<li><code>Send</code>阻塞：当<code>SendBuf</code>满时。</li>
+<li><code>Recv</code>阻塞：当<code>RecvBuf</code>满时。<br><code>Socket</code>默认是阻塞方式，也可以手工设置为非阻塞方式。</li>
+</ol>
+<h5 id="设置获取缓冲区"><a href="#设置获取缓冲区" class="headerlink" title="设置获取缓冲区"></a>设置获取缓冲区</h5><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取sendbuf大小</span></span><br><span class="line"><span class="keyword">int</span> bufsize = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">socklen_t</span> len = <span class="number">4</span>;</span><br><span class="line"><span class="keyword">int</span> ret = getsockopt(client_sock.hSock, SOL_SOCKET,</span><br><span class="line">        SO_SNDBUF, <span class="comment">//SO_RCVBUF</span></span><br><span class="line">        (<span class="keyword">char</span>*)&amp;bufsize, &amp;len);</span><br><span class="line"><span class="comment">//设置sendbuf大小</span></span><br><span class="line"><span class="keyword">int</span> maxlen = <span class="number">128</span> * <span class="number">1024</span>;</span><br><span class="line"><span class="keyword">int</span> ret = setsocketopt(client_sock.hSock, SOL_SOCKET,</span><br><span class="line">        SO_SNDBUF,</span><br><span class="line">        (<span class="keyword">const</span> <span class="keyword">char</span>*)&amp;bufsize, <span class="keyword">sizeof</span>(<span class="keyword">int</span>));</span><br></pre></td></tr></table></figure>
+<h4 id="数据的传输"><a href="#数据的传输" class="headerlink" title="数据的传输"></a>数据的传输</h4><p>交换机职责：交换数据，将从一个口进入的数据包（包括源地址和目标地址），转发到其他的口。如何转发完全由交换机决定。一种情况是直接将数据包转发到每一个口，另一种情况是交换机上记录了每个口的主机<code>IP</code>，选择对应的口转发。使用<code>wireshark</code>可以发现网口上接收到的数据包，有的目标<code>IP</code>不是自己这台主机的。</p>
+<ol>
+<li>发送：<code>OS</code>把数据包通过网卡、上行传至交换机。</li>
+<li>接收：<code>OS</code>从网卡获取数据包。</li>
+</ol>
+<h5 id="UDP传输"><a href="#UDP传输" class="headerlink" title="UDP传输"></a>UDP传输</h5><p>正常流程</p>
+<ol>
+<li>主机<code>A</code>发送一个<code>UDP</code>包，此包抵达交换机的<code>1</code>口。</li>
+<li>交换机没有干预，此包复制到<code>2、3、4</code>口。</li>
+<li>处于<code>2</code>口的主机<code>B</code>，接收到这个包。<br>不正常情况<br>交换机丢到了这个包。没有转到<code>2</code>口。问题是主机<code>A</code>无法知道这个包是否抵达目标主机。</li>
+</ol>
+<h5 id="TCP传输"><a href="#TCP传输" class="headerlink" title="TCP传输"></a>TCP传输</h5><p>三次握手和四次握手。<br><img src="tcp.jpg" alt=""></p>
+<p><code>TCP</code>称为可靠地传输协议，因为发送端能够知道这个包有没有抵达目标，并且底层有重发机制。<code>UDP</code>的<code>SendTo</code>不会失败，它只是把数据包送出去，不管到达与否。<code>TCP</code>的<code>Send</code>包会失败，当网络不可抵达时（未收到<code>ACK</code>），就是发送失败了。</p>
+<h4 id="连接管理"><a href="#连接管理" class="headerlink" title="连接管理"></a>连接管理</h4><p><code>select</code>查询机制，本质是一个函数，用来向<code>OS</code>查询：在一堆<code>socket</code>中，查出可以读写的<code>socket</code>。<code>OS_Socket</code>类做了一个简单的封装。不能读因为缓冲区是空的，不能写因为缓冲区是满的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">int Select_ForReading(int timeout);</span><br><span class="line">int Select_ForWriting(int timeout);</span><br></pre></td></tr></table></figure></p>
+<p>用途：如果服务器同时与大量的客户端交互，可以用<code>select</code>查询哪些<code>socket</code>有上行的数据，如果有数据才做响应。这样就没有必要为每个<code>client</code>创建单独的一个线程。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjgnmc259000krxqwbc9ngmk7" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-网络（2）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/04/30/网络（2）/" class="article-date">
@@ -122,7 +218,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjglynp72000i6tqwzs8udole" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjgnmc257000irxqwv37vyhwn" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -216,7 +312,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjglynp70000g6tqwybty6z15" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjgnmc256000grxqwtvzvqiu3" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -264,7 +360,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjglynp6v000e6tqw9tdephjs" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjgnmc253000erxqwrxh3vmj7" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -336,7 +432,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjglynp6t000c6tqwvd8i28bg" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjgnmc251000crxqwsylafz8z" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -413,7 +509,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjglynp6o000a6tqw0oxlp6b3" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjgnmc24y000arxqwzoy6lxbj" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -485,7 +581,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjglynp5800006tqwvuxlrh0x" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjgnmc23v0000rxqwaesaod1w" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -525,7 +621,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjglynp75000m6tqw45wg1s3u" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjgnmc25c000orxqwzg5m1qe0" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -588,7 +684,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjglynp6c00066tqwzxqlrbp3" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjgnmc24u0006rxqw5ejiuzfd" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -637,92 +733,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjglynp6a00056tqwc4o8afsa" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjgnmc24t0005rxqwulxrz9vf" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-面试复习" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/04/18/面试复习/" class="article-date">
-  <time datetime="2018-04-18T03:40:05.000Z" itemprop="datePublished">2018-04-18</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/04/18/面试复习/">面试复习（1）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h6 id="1-指针数组和数组指针-读法与顺序相反"><a href="#1-指针数组和数组指针-读法与顺序相反" class="headerlink" title="1.指针数组和数组指针(读法与顺序相反)"></a>1.指针数组和数组指针(读法与顺序相反)</h6><p>int (*p) [n]; 数组指针，首先是一个指针然后这个指针指向整型数组。<br><br>int *p[n]; []优先级更高，首先是一个数组，int* 说明了这个数组的元素是int指针。</p>
-<h6 id="2-常量指针和指针常量-读法与顺序相同"><a href="#2-常量指针和指针常量-读法与顺序相同" class="headerlink" title="2.常量指针和指针常量(读法与顺序相同)"></a>2.常量指针和指针常量(读法与顺序相同)</h6><p>int const* p; 常量指针，首先是一个指针这个指针指向常量。<br><br>int * const p; 指针常量，首先是一个常量，并且用指针修饰，指针不能更改。</p>
-<h6 id="3-字符串转换为整数"><a href="#3-字符串转换为整数" class="headerlink" title="3.字符串转换为整数"></a>3.字符串转换为整数</h6><p>输入的指针不能为空，对正负值进行判断，对输入的字符进行判断是否包含非数值字符，以及溢出处理。除了完成基本的功能外，还会关注是否考虑了边界条件、特殊输入(Null指针，空字符串等)以及错误处理。</p>
-<h6 id="4-sizeof-Class"><a href="#4-sizeof-Class" class="headerlink" title="4.sizeof(Class)"></a>4.sizeof(Class)</h6><p>定义空类型，里面没有任何成员变量和成员函数，对该类似求sizeof()，得到的结果是1。空类型的实例不包含任何信息，本来应该是0，但是当声明该类型的实例时，必须在内存中占有一定的空间，否则无法使用。具体由编译器决定。加上构造和析构函数也是一样，只需要知道函数的地址即可。函数的地址只与类型有关而与实例无关。如果把析构函数标记为虚函数，会为该类型生成虚函数表，并在该类型的每一个实例中添加一个指向虚函数表的指针，32位上4个字节，64位上8个字节。</p>
-<h6 id="5-拷贝构造函数"><a href="#5-拷贝构造函数" class="headerlink" title="5.拷贝构造函数"></a>5.拷贝构造函数</h6><p>拷贝构造函数不允许传值，如果允许就会在拷贝构造函数内调用拷贝构造函数，就会形成永无休止的递归调用从而导致栈溢出。所以是不允许的，标准形式为A（const A&amp; other）。</p>
-<h6 id="6-赋值运算符函数"><a href="#6-赋值运算符函数" class="headerlink" title="6.赋值运算符函数"></a>6.赋值运算符函数</h6><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">CMyString&amp; operator=(const CMyString &amp;str)</span><br><span class="line">&#123;</span><br><span class="line">    if(this == str)</span><br><span class="line">    &#123;</span><br><span class="line">        return *this;</span><br><span class="line">    &#125;</span><br><span class="line">    delete []m_pData;</span><br><span class="line">    m_pData = NULL;</span><br><span class="line">    m_pData = new char[strlen(str.m_pData) + 1];</span><br><span class="line">    strcpy(m_pData, str.m_pData);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h6 id="注意点："><a href="#注意点：" class="headerlink" title="注意点："></a>注意点：</h6><ol>
-<li>是否把返回值类型声明为该类型的引用，并在函数结束前返回实例自身的引用(*this)。只有返回引用才允许连续赋值。否则如果函数的返回值是void，str1=str2=str3无法通过编译。</li>
-<li>是否把传入的参数类型声明为常量引用。如果传入的参数不是引用而是实例，那么从形参到实参会调用一次拷贝构造函数。声明为引用可以避免消耗，提升效率。在赋值运算符函数内不会改变传入的实例的状态，因此应该为传入的引用参数加上const关键字。</li>
-<li>是否释放实例自身已有的内存，忘记在新内存前释放自己已有的空间程序将出现内存泄露。</li>
-<li>是否判断传入参数和当前实例是否相同，如果相同则直接返回，如果事先不判断就进行赋值，那么在释放实例自身的内存时会出现严重的问题；当*this和传入参数相同时，一旦释放了自身内存，传入参数的内存同时被释放，再也找不到需要赋值的内容了。</li>
-</ol>
-<h6 id="高级做法："><a href="#高级做法：" class="headerlink" title="高级做法："></a>高级做法：</h6><p>再分配内存前先用delete释放了实例m_pData的内存。如果此时内存不足导致new char抛出异常，m_pData将是一个空指针，这样会引起程序崩溃。违背了异常安全性的原则。在赋值运算符函数中实现异常安全性，有两种方法。一是先用new分配新内容在用delete进行释放已有内容。这样只在分配内容成功后再释放原来的内容，当分配内存失败时我们可以确保实例不会被修改。更好的方法是先创建临时实例，再交换临时实例和原来的实例。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">CMyString&amp; operator=(const CMyString &amp;str)</span><br><span class="line">&#123;</span><br><span class="line">    if(this != &amp;str)</span><br><span class="line">    &#123;</span><br><span class="line">        CMyString strTemp(str);</span><br><span class="line">        char* pTemp = strTemp.m_pData;</span><br><span class="line">        strTemp.m_pData = m_pData;</span><br><span class="line">        m_pData = pTemp;</span><br><span class="line">    &#125;</span><br><span class="line">    return *this;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>strTemp是一个局部变量，但程序运行到if外面时出了变量的作用域，就会自动调用strTemp的析构函数，把strTemp.m_pData所指向的区域释放掉。相当于自动调用析构函数释放实例的内存。在CMyString的构造函数里用new分配内存。如果由于内存不足抛出bad_alloc等异常，我们还没有修改原来的实例状态，所以保证了异常安全性。</p>
-<h6 id="7-vector、数组、指针"><a href="#7-vector、数组、指针" class="headerlink" title="7.vector、数组、指针"></a>7.vector、数组、指针</h6><p>为了解决数组空间效率不高的问题，人们又设计实现了多种动态数组，比如c++的stl中的vector。为了避免浪费，我们先为数组开辟较小的空间，然后往数组中添加数据。当数组的数目超过数组的容量时，我们再重新分配一块更大的空间(stl中的vector每次扩充容量时，新的容量都是前一次的两倍)，把之前的数据复制到新的数组中，再把之前的内存释放，这样就能减少内存的浪费。每次扩充数组的容量都有大量的额外操作，这对时间性能有负面影响，因此使用动态数组要尽量减少改变数组容量大小的操作。在c++中当数组作为函数的参数进行传递时，数组就自动退化为同类型的指针。</p>
-<h6 id="8-字符串"><a href="#8-字符串" class="headerlink" title="8.字符串"></a>8.字符串</h6><p>sizeof(string)，string的实现在不同的库中可能有不同，但是同一个库中相同点是，无论string中放多长的字符串，它的sizeof都是固定的，字符串的所占空间是从堆中动态分配的，与sizeof无关。自己的机器上是32。c/c++中每个字符串都以字符’\0’作为结尾，这样可以方便的找到字符串的最后尾部。但由于这个特点，每个字符串中都有一个额外字符开销，可能会造成越界。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">char str[10];</span><br><span class="line">strcpy(str, &quot;0123456789&quot;);</span><br></pre></td></tr></table></figure></p>
-<p>由于\0的原因，要正确的复制该字符串，至少需要一个长度为11个字节的数组。<br><br>为了节省内存，C/C++把常量字符串放到单独的一个内存区域。当几个指针赋值给相同的常量字符串时，它们实际上会指向相同的内存地址。但使用常量内存初始化数组，情况会有所不同。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">char str1[] = &quot;hello world&quot;;</span><br><span class="line">char str2[] = &quot;hello world&quot;;</span><br><span class="line">char* str3 = &quot;hello world&quot;;</span><br><span class="line">char* str4 = &quot;hello world&quot;;</span><br><span class="line">string str5 = &quot;hello world&quot;;</span><br><span class="line">string str6 = &quot;hello world&quot;;</span><br></pre></td></tr></table></figure></p>
-<p>str1和str2两个字符串数组，会为它们分配两个长度为12个字节的空间，并把“hello world”分别复制进去。这是两个初始地址不同的数组。str3和str4是两个指针，我们无须为它们分配内存来存储字符串中的内容，而只需要把它们指向”hello world”在内存中的地址即可。常量字符串在内存中只有一个拷贝，因此str3和str4指向同一个地址。str5与str6也是相同的，并且与str3公用内存地址。<br><br>合并两个数组(包括字符串)时，如果从前往后复制每个数字(或字符)需要重复移动数字(或字符)多次，那么可以考虑从后向前复制，这样就能减少移动的次数，从而提高效率。(替换空格题目)</p>
-<h6 id="9-链表"><a href="#9-链表" class="headerlink" title="9.链表"></a>9.链表</h6><p>特别注意向链表添加节点函数的第一个参数是指向指针的指针。当我们向空链表插入一个节点时，新插入的节点就是链表的头指针。由于此时会改动头指针，因此必须把pHead参数设为指针的指针。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">void AddToTail(ListNode** pHead, int value)</span><br><span class="line">&#123;</span><br><span class="line">    ListNode* pNew = new ListNode();</span><br><span class="line">    pNew-&gt;m_nValue = value;</span><br><span class="line">    pNew-&gt;m_pNext = NULL;</span><br><span class="line">    if(*pHead == NULL)</span><br><span class="line">        *pHead = pNew;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">        ListNode* temp = *pHead;</span><br><span class="line">        while(temp-&gt;m_pnext != NULL)</span><br><span class="line">        &#123;</span><br><span class="line">            temp = temp-&gt;m_pnext;</span><br><span class="line">        &#125;</span><br><span class="line">        temp-&gt;m_pnext = pNew;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h6 id="10-红黑树"><a href="#10-红黑树" class="headerlink" title="10.红黑树"></a>10.红黑树</h6><p>红黑树是把树中的节点定义为红黑两种颜色，并通过规则确保从根节点到叶节点的最长路径的长度不超过最短路径的两倍。在c++的stl中，set、multiset、map、multimap等数据结构都是基于红黑树实现的。</p>
-<h6 id="11-c-成员变量的初始化"><a href="#11-c-成员变量的初始化" class="headerlink" title="11.c++成员变量的初始化"></a>11.c++成员变量的初始化</h6><p>c++中成员变量的初始化顺序只与它们在类中声明的顺序有关，而与在初始化列表中的顺序无关。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">class A</span><br><span class="line">&#123;</span><br><span class="line">private:</span><br><span class="line">    int n1;</span><br><span class="line">    int n2;</span><br><span class="line">public:</span><br><span class="line">    A(): n2(0), n1(n2 + 2)</span><br><span class="line">    &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>n1先于n2被声明，因此n1也会在n2之前被初始化，所以先会用n2+2去初始化n1.由于n2这个时候还没有被初始化，因此它的值是随机的。</p>
-<h6 id="12-查找和排序"><a href="#12-查找和排序" class="headerlink" title="12.查找和排序"></a>12.查找和排序</h6><p>要求在排序的数组（或者部分排序的数组）中查找一个数字或者统计某个数字出现的次数，可以尝试使用二分查找算法。哈希表最主要的优点是能够在O(1)时间查找某一个元素，是效率最高的查找方式。但缺点是需要额外的空间来实现哈希表。能够从额外空间消耗、平均时间复杂度和最差时间复杂度等方面比较不同排序算法的优缺点。<br><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">//快速排序代码</span><br><span class="line">int partition(int data[], int start, int end)</span><br><span class="line">&#123;</span><br><span class="line">    if(data == NULL || start &lt; 0 || end &lt; 0)</span><br><span class="line">        throw new std::exception(&quot;Invalid Parameters&quot;);</span><br><span class="line">    int small = start - 1;</span><br><span class="line">    for(int i = start; i &lt; end; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        if(data[i] &lt; data[end])</span><br><span class="line">        &#123;</span><br><span class="line">            small++;</span><br><span class="line">            if(small != i)</span><br><span class="line">            &#123;</span><br><span class="line">                int temp = data[small];</span><br><span class="line">                data[small] = data[i];</span><br><span class="line">                data[i] = temp;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    small++;</span><br><span class="line">    int temp = data[small];</span><br><span class="line">    data[small] = data[end];</span><br><span class="line">    data[end] = temp;</span><br><span class="line"></span><br><span class="line">    return small;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void quickSort(int data[], int start, int end)</span><br><span class="line">&#123;</span><br><span class="line">    int idx = partition(data, start, end);</span><br><span class="line">    if(idx - 1 &gt; start)</span><br><span class="line">        quickSort(data, start, idx - 1);</span><br><span class="line">    if(end &gt; idx + 1)</span><br><span class="line">        quickSort(data, idx + 1, end);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>在子数组data[start…end]中，partition维护了四个区域。data[start…small]区间内的值都小于等于data[end],data[small+1…i]的区间都大于data[end]，data[i+1,end-1]区间内的所有值没有限制。data[end]为每一轮选取的数字。</p>
-<table>
-<thead>
-<tr>
-<th style="text-align:center">&lt;=x</th>
-<th style="text-align:center">&gt;x</th>
-<th style="text-align:center">无限制</th>
-<th style="text-align:center">选取值</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">start—&gt;small</td>
-<td style="text-align:center">small+1—&gt;i</td>
-<td style="text-align:center">i+1—&gt;end-1</td>
-<td style="text-align:center">end</td>
-</tr>
-</tbody>
-</table>
-<h6 id="13-C-标准库和std命名空间"><a href="#13-C-标准库和std命名空间" class="headerlink" title="13.C++标准库和std命名空间"></a>13.C++标准库和std命名空间</h6><p>C++是在C语言的基础上进行开发的，早期的C++并不完善，不支持命名空间也没有自己的编译器，而是将C++代码翻译成C代码，再通过C编译器完成编译。这个时候的C++仍然使用C语言的库，stdio.h、stdlib.h、string.h等头文件依然有效；此外C++也开发了一些新的库，增加了自己的头文件，例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iostream.h fstream.h complex.h</span><br></pre></td></tr></table></figure></p>
-<p>和C语言一样，C++头文件仍然以.h为后缀，它们所包含的类、函数、宏等都是全局范围的。后来C++引入了命名空间的概念，计划重新编写库，将类、函数、宏等都统一纳入一个命名空间，这个命名空间的名字就是std。std是standard的缩写，即为“标准命名空间”。但是这时已经有很多用老式C++开发的程序，它们的代码中并没有使用命名空间，直接修改原来的库会带来很严重的后果。所以提出了新的想法，保留原来的库和头文件，它们可以在C++中继续使用，然后再将原来的库复制一份，在此基础上稍加修改，把类、函数、宏等纳入命名空间std下，这就成为了新版C++标准库，这样共存在了两份功能相似的库。<br><br>为了避免头文件重命名，新版的C++库也对头文件的命名进行了调整，去掉了后缀.h，所以老式C++的iostream.h变为iostream，fstream.h变为了fstream。而对于原来的C语言头文件，也采用同样的方法，但在每个名字前要添加一个c字母，如stdio.h变为cstdio，stdlib.h变为cstdlib。<br>需要注意的是旧的C++头文件是官方所反对使用的，已明确提出不再支持，但是旧的C头文件仍然可以使用，以保持兼容性。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjglynp74000k6tqwdflefl4d" class="article-share-link">Teilen</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
 
     </footer>
   </div>
@@ -759,7 +773,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 15px;">网络</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
     </div>
   </div>
 
@@ -768,7 +782,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archiv</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
     </div>
   </div>
 
@@ -779,6 +793,10 @@
     <h3 class="widget-title">letzter Beitrag</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2018/05/01/网络（3）/">网络（3）</a>
+          </li>
         
           <li>
             <a href="/2018/04/30/网络（2）/">网络（2）</a>
@@ -794,10 +812,6 @@
         
           <li>
             <a href="/2018/04/27/线程（2）/">线程（2）</a>
-          </li>
-        
-          <li>
-            <a href="/2018/04/26/线程（1）/">线程（1）</a>
           </li>
         
       </ul>
