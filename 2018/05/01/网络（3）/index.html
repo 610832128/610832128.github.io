@@ -15,12 +15,12 @@
 <meta property="og:site_name" content="小白拜拜拜">
 <meta property="og:description" content="TCP SocketTCP: Transmission control protocal，传输控制协议，是与UDP并列的两个传输协议。 C/S设计模式TCP的设计模式成为C/S，即Client-Server（客户机-服务器）模式（UDP两端是对等的，TCP两端是不对等的，一端称为Client，另一端称为Server）。对于TCP，客户端和服务器的写法是不同的。  客户端 连接服务器connect。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://yoursite.com/2018/05/01/images/tcp.jpg">
-<meta property="og:updated_time" content="2018-05-01T11:59:30.390Z">
+<meta property="og:image" content="http://yoursite.com/images/tcp.jpg">
+<meta property="og:updated_time" content="2018-05-01T12:01:34.932Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="网络（3）">
 <meta name="twitter:description" content="TCP SocketTCP: Transmission control protocal，传输控制协议，是与UDP并列的两个传输协议。 C/S设计模式TCP的设计模式成为C/S，即Client-Server（客户机-服务器）模式（UDP两端是对等的，TCP两端是不对等的，一端称为Client，另一端称为Server）。对于TCP，客户端和服务器的写法是不同的。  客户端 连接服务器connect。">
-<meta name="twitter:image" content="http://yoursite.com/2018/05/01/images/tcp.jpg">
+<meta name="twitter:image" content="http://yoursite.com/images/tcp.jpg">
   
     <link rel="alternate" href="/atom.xml" title="小白拜拜拜" type="application/atom+xml">
   
@@ -143,7 +143,7 @@
 <li>交换机没有干预，此包复制到<code>2、3、4</code>口。</li>
 <li>处于<code>2</code>口的主机<code>B</code>，接收到这个包。<br>不正常情况<br>交换机丢到了这个包。没有转到<code>2</code>口。问题是主机<code>A</code>无法知道这个包是否抵达目标主机。</li>
 </ol>
-<h5 id="TCP传输"><a href="#TCP传输" class="headerlink" title="TCP传输"></a>TCP传输</h5><p>三次握手和四次握手。<br><img src="../images/tcp.jpg" alt=""></p>
+<h5 id="TCP传输"><a href="#TCP传输" class="headerlink" title="TCP传输"></a>TCP传输</h5><p>三次握手和四次握手。<br><img src="/images/tcp.jpg" alt=""></p>
 <p><code>TCP</code>称为可靠地传输协议，因为发送端能够知道这个包有没有抵达目标，并且底层有重发机制。<code>UDP</code>的<code>SendTo</code>不会失败，它只是把数据包送出去，不管到达与否。<code>TCP</code>的<code>Send</code>包会失败，当网络不可抵达时（未收到<code>ACK</code>），就是发送失败了。</p>
 <h4 id="连接管理"><a href="#连接管理" class="headerlink" title="连接管理"></a>连接管理</h4><p><code>select</code>查询机制，本质是一个函数，用来向<code>OS</code>查询：在一堆<code>socket</code>中，查出可以读写的<code>socket</code>。<code>OS_Socket</code>类做了一个简单的封装。不能读因为缓冲区是空的，不能写因为缓冲区是满的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">int Select_ForReading(int timeout);</span><br><span class="line">int Select_ForWriting(int timeout);</span><br></pre></td></tr></table></figure></p>
 <p>用途：如果服务器同时与大量的客户端交互，可以用<code>select</code>查询哪些<code>socket</code>有上行的数据，如果有数据才做响应。这样就没有必要为每个<code>client</code>创建单独的一个线程。</p>
@@ -151,7 +151,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjgnmf8m2000kacqwlwlaw4pz" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjgnmh0fx000kjpqwhitaf2zv" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
