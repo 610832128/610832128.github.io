@@ -97,11 +97,13 @@
 <h4 id="7-了解C-默默编写并调用了哪些函数"><a href="#7-了解C-默默编写并调用了哪些函数" class="headerlink" title="7.了解C++默默编写并调用了哪些函数"></a>7.了解C++默默编写并调用了哪些函数</h4><p>如果自己没有对空类进行声明，编译器会为其声明（编译器版本的）一个拷贝构造函数、析构函数、copy赋值操作符，如果没有声明构造函数也会声明一个默认构造函数。如果声明了构造函数就不会再创建默认的构造函数。c++不允许让引用该指向不同的对象，所以需要自己定义copy赋值操作符。</p>
 <h4 id="8-若不想使用编译器自动生成的函数，就应该明确拒绝"><a href="#8-若不想使用编译器自动生成的函数，就应该明确拒绝" class="headerlink" title="8.若不想使用编译器自动生成的函数，就应该明确拒绝"></a>8.若不想使用编译器自动生成的函数，就应该明确拒绝</h4><p>有很多类的对象时独一无二的，这是不需要拷贝构造函数和copy赋值运算符，实现这一目的的方法是在类中声明但不实现并且需要设置为私有的：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomeForSale</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	HomeForSale();</span><br><span class="line">	~HomeForSale();</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	HomeForSale(<span class="keyword">const</span> HomeForSale&amp;);</span><br><span class="line">	HomeForSale&amp; <span class="keyword">operator</span> = (<span class="keyword">const</span> HomeForSale&amp;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
 <p>但是如果在member函数或友元中访问，会出现链接错误，将连接期错误移至编译期是有可能的，只要将copy构造函数和copy assignment操作符声明为private就可以办到，但是在一个基类中。</p>
-<h4 id="9"><a href="#9" class="headerlink" title="9."></a>9.</h4>
+<h4 id="9-为多态基类声明virtual析构函数"><a href="#9-为多态基类声明virtual析构函数" class="headerlink" title="9.为多态基类声明virtual析构函数"></a>9.为多态基类声明virtual析构函数</h4><p>多态性质的基类应该声明一个<code>virtual</code>析构函数，如果<code>class</code>带有任何<code>virtual</code>函数，它就应该拥有一个<code>virtual</code>析构函数。如果类的设计不是为了基类所用，就不应该声明为<code>virtual</code>析构函数。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Shape</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	Shape()</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; <span class="string">"shape create"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">virtual</span> ~Shape() <span class="comment">//声明为virtual时，基类和子类的构造函数</span></span><br><span class="line">    <span class="comment">//和析构函数分别调用，否则，析构函数只有基类会调用</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; <span class="string">"shape delete"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">virtual</span> <span class="keyword">double</span> <span class="title">getSquare</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Rect</span>:</span> <span class="keyword">public</span> Shape&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	Rect(<span class="keyword">double</span> width, <span class="keyword">double</span> height)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; <span class="string">"rect create"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">		<span class="keyword">this</span>-&gt;width = width;</span><br><span class="line">		<span class="keyword">this</span>-&gt;height = height;</span><br><span class="line">	&#125;</span><br><span class="line">	~Rect()</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; <span class="string">"rect delete"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="function"><span class="keyword">double</span> <span class="title">getSquare</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">		<span class="keyword">return</span> width * height;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="keyword">double</span> width, height;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Factory</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">static</span> Shape* <span class="title">getShape</span><span class="params">(<span class="keyword">char</span>* type)</span></span></span><br><span class="line"><span class="function">	</span>&#123;</span><br><span class="line">		Shape * shape = <span class="literal">NULL</span>;</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">strcmp</span>(type, <span class="string">"Rect"</span>) == <span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			shape = <span class="keyword">new</span> Rect(<span class="number">3.0</span>, <span class="number">4.0</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> shape;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	Shape * rect = Factory::getShape(<span class="string">"Rect"</span>);</span><br><span class="line">	<span class="keyword">if</span> (rect != <span class="literal">NULL</span>)</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; rect-&gt;getSquare() &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">delete</span> rect;</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>欲实现virtual函数，对象需要携带某些信息，主要用来在运行期决定哪个virtual函数需要被调用。这份信息通常是由一个vptr虚函数表指针指出，它指向一个由函数指针构成的数组，成为vtble(虚函数表)。每一个带有virtual函数的类都有一个相应的vtbl。当对象调用某个虚函数时，实际被调用的函数取决于该对象的vptr所指的那个vtbl。-编译器会在其中寻找到合适的函数指针。如果类中包含virtual函数，对象的体积会增加。</p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjgxr3nhn000a4cqw5off4mmn" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjgxwu9uj000ayhqw6m7x9yat" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -197,7 +199,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjgxr3nia000m4cqwg9alklr1" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjgxwu9v1000myhqwkt3w4wow" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -269,7 +271,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjgxr3ni9000k4cqwgj3spp5w" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjgxwu9uz000kyhqw2pitcxy9" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -363,7 +365,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjgxr3ni7000i4cqw0oj2yul6" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjgxwu9ux000iyhqwh6qx59qp" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -411,7 +413,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjgxr3ni1000g4cqwrmyi40lk" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjgxwu9ut000gyhqw7oei6imq" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -483,7 +485,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjgxr3nhz000e4cqwifrmltvf" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjgxwu9ur000eyhqwkf6wqxjr" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -560,7 +562,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjgxr3nhw000c4cqwff5m6ez1" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjgxwu9up000cyhqwhlgg72pn" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -632,7 +634,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjgxr3nga00004cqw1klxzokb" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjgxwu9t20000yhqw7dfhxxut" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -680,7 +682,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjgxr3nid000q4cqwddj3j4mi" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjgxwu9v4000qyhqwr63cuhqn" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -743,7 +745,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjgxr3nhj00064cqwa43z02yy" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjgxwu9ue0006yhqwilweqtj5" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
