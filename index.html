@@ -62,6 +62,57 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-effective-c-（1）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/08/effective-c-（1）/" class="article-date">
+  <time datetime="2018-05-08T14:04:30.000Z" itemprop="datePublished">2018-05-08</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/05/08/effective-c-（1）/">effective c++（1）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="1-声明式、定义式、签名式、初始化"><a href="#1-声明式、定义式、签名式、初始化" class="headerlink" title="1.声明式、定义式、签名式、初始化"></a>1.声明式、定义式、签名式、初始化</h4><h4 id="2-explicit"><a href="#2-explicit" class="headerlink" title="2.explicit"></a>2.explicit</h4><p>explicit阻止被用来执行隐式的类型转换。禁止编译器执行非预期的类型转换。</p>
+<h4 id="3-C-是一个语言联邦"><a href="#3-C-是一个语言联邦" class="headerlink" title="3.C++是一个语言联邦"></a>3.C++是一个语言联邦</h4><p>起初它只是C加上一些面向对象特性，最初名称为C with Classes，后来异常对函数结构化带来不同做法，模板提供新的思考方式，STL定义了伸展性做法，C++也增加了重载操作。<br>现在C++是多重泛型编程语言，支持过程形式（procedural）、面向对象形式（object-oriented）、函数形式（functional）、泛型形式（generic）、元编程模式（metaprogramming）。</p>
+<h4 id="4-尽量以const、enum、inline替换预处理的-define"><a href="#4-尽量以const、enum、inline替换预处理的-define" class="headerlink" title="4.尽量以const、enum、inline替换预处理的#define"></a>4.尽量以<code>const</code>、<code>enum</code>、<code>inline</code>替换预处理的<code>#define</code></h4><p>在类中声明数组的做法。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">5</span>;</span><br><span class="line">	<span class="keyword">int</span> <span class="built_in">array</span>[a]; <span class="comment">//要使用a则必须是静态变量，至多只有一份实体，使用静态变量必须再声明为常量。</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Test1</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="keyword">enum</span>&#123;a = <span class="number">5</span>&#125;;</span><br><span class="line">	<span class="keyword">int</span> <span class="built_in">array</span>[a];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>使用宏可能出现很多错误，例如<code>#define max(a, b) (a) &gt; (b) ? (a) : (b)</code>，可以使用内联函数进行替换。尽量以<code>const</code>、<code>enum</code>、<code>inline</code>替换预处理的<code>#define</code>，对于单纯常量，最好以<code>const</code>对象或<code>enum</code>替换<code>#define</code>。对于形似函数的宏，最好改用<code>inline</code>函数替换<code>#define</code>。</p>
+<h4 id="5-尽可能的用const"><a href="#5-尽可能的用const" class="headerlink" title="5.尽可能的用const"></a>5.尽可能的用<code>const</code></h4><p><code>const</code>可以指定语义约束，修饰指针时可分为指针常量和常量指针，STL容器是根据指针塑模出来，迭代器作用类似<code>T*</code>指针：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;::iterator iter = vec.begin();</span><br><span class="line"><span class="comment">//类似于指针常量，指针不可变，所以iter++出错。</span></span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt;::const_iterator iter = vec.begin();</span><br><span class="line"><span class="comment">//类似于常量指针，指针指向常量，所以*iter=10出错。</span></span><br></pre></td></tr></table></figure></p>
+<p>令函数返回一个常量，往往可以降低因客户错误造成的意外，而又不至于放弃安全和高效性。当参数不需要改动的时候可以声明为<code>const</code>。<br><code>const</code>成员函数中如果只是常量性不同，可以被重载。例如：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TextBlock</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">const</span>&amp; <span class="keyword">char</span> <span class="keyword">operator</span>[](<span class="built_in">std</span>::<span class="keyword">size_t</span> position) <span class="keyword">const</span></span><br><span class="line">    &#123;<span class="keyword">return</span> text[position];&#125; <span class="comment">//operator[] for const对象</span></span><br><span class="line">    <span class="keyword">char</span>&amp; <span class="keyword">operator</span>[](<span class="built_in">std</span>::<span class="keyword">size_t</span> position)</span><br><span class="line">    &#123;<span class="keyword">return</span> text[position];&#125; <span class="comment">//operator[] for non-const对象</span></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> text;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">////</span></span><br><span class="line"><span class="function">TextBlock <span class="title">tb</span><span class="params">(<span class="string">"hello"</span>)</span></span>;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; tb[<span class="number">0</span>]; <span class="comment">//调用非常量operator</span></span><br><span class="line"><span class="function">TextBlock <span class="title">tbc</span><span class="params">(<span class="string">"hello"</span>)</span></span>;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; tbc[<span class="number">0</span>]; <span class="comment">//调用常量operator</span></span><br></pre></td></tr></table></figure></p>
+<p>常量成员函数两个流行概念，<code>bitwise constness</code>和<code>logical constness</code>， <code>bitwise constness</code>不可更改对象内任何<code>non-static</code>成员。<code>logical constness</code>可以修改。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CTextBlock</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="built_in">std</span>::<span class="keyword">size_t</span> length() <span class="keyword">const</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (!lengthIsValid)&#123;</span><br><span class="line">			textLength = <span class="built_in">strlen</span>(pText);</span><br><span class="line">			lengthIsValid = <span class="literal">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="keyword">char</span>* pText;</span><br><span class="line">	<span class="keyword">mutable</span> <span class="keyword">size_t</span> textLength; <span class="comment">//不添加mutable会报错</span></span><br><span class="line">	<span class="keyword">mutable</span> <span class="keyword">bool</span> lengthIsValid;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>当<code>const</code>和<code>non-const</code>成员函数有着实质等价的实现时，令<code>non-const</code>版本调用<code>const</code>版本可以避免代码重复。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TextBlock</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="keyword">const</span> <span class="keyword">char</span>&amp; <span class="keyword">operator</span>[](<span class="keyword">size_t</span> position) <span class="keyword">const</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span> text[position];</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">char</span>&amp; <span class="keyword">operator</span>[](<span class="keyword">size_t</span> position)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">const_cast</span>&lt;<span class="keyword">char</span> &amp;&gt;(   <span class="comment">//将op[]返回值的const转除</span></span><br><span class="line">			<span class="keyword">static_cast</span>&lt;<span class="keyword">const</span> TextBlock&amp;&gt;(* <span class="keyword">this</span>)  <span class="comment">//为*this加上const</span></span><br><span class="line">				[position]	<span class="comment">//调用const op[]</span></span><br><span class="line">			);</span><br><span class="line">	&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">string</span> text;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h4 id="6-确定对象被使用前已先被初始化"><a href="#6-确定对象被使用前已先被初始化" class="headerlink" title="6.确定对象被使用前已先被初始化"></a>6.确定对象被使用前已先被初始化</h4><p>通常如果使用<code>C part of C++</code>而且初始化可能招致运行期成本，那么就不保证发生初始化，一旦进入<code>non-C parts of C++</code>,规则有些变化。<br>最佳方法是对于无任何成员内置类型进行手动初始化。对于内置类型以外的责任落到构造函数身上。注意赋值和初始化的区别。写到<strong>成员初始表</strong>中才是初始化，类以声明次序进行初始化。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">ABEntry::ABEntry(<span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; name, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> &amp; address,</span><br><span class="line">	 <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">list</span>&lt;PhoneNumber&gt;&amp; phones)</span><br><span class="line">: theName(name),</span><br><span class="line">  theAddress(address),</span><br><span class="line">  thePhones(phone),</span><br><span class="line">  numTimeConsulted(<span class="number">0</span>)  <span class="comment">//成员初值列，真正的初始化</span></span><br><span class="line">&#123;</span><br><span class="line">	theName = name;</span><br><span class="line">	theAddress = address; <span class="comment">//只是赋值，默认的构造函数进行初始化</span></span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>C++</code>对定义在不同的编译单元内的非局部静态对象<code>(non-local static)</code>的初始化相对次序无明确定义。编译单元是指产出单一目标文件的那些源码。基本上是单一源码文件加上所包含的头文件。当某个编译单元的非局部静态对象调用了另一个编译单元的非局部静态对象时会出现错误。<code>C++</code>保证函数内的<code>local static</code>对象会在函数被调用期间、首次遇到该对象的定义式时被初始化,可以使用类似单例模式的方法,使用局部静态对象替换局部非静态对象：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FileSystem</span>&#123;</span>&#125;;</span><br><span class="line"><span class="function">FileSystem&amp; <span class="title">tfs</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">static</span> FileSystem fs;</span><br><span class="line">	<span class="keyword">return</span> fs;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Directory</span>&#123;</span>&#125;;</span><br><span class="line">Directory::Directory(params)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">std</span>::<span class="keyword">size_t</span> disks = tfs().numDisks();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h4 id="7-了解C-默默编写并调用了哪些函数"><a href="#7-了解C-默默编写并调用了哪些函数" class="headerlink" title="7.了解C++默默编写并调用了哪些函数"></a>7.了解C++默默编写并调用了哪些函数</h4><p>如果自己没有对空类进行声明，编译器会为其声明（编译器版本的）一个拷贝构造函数、析构函数、copy赋值操作符，如果没有声明构造函数也会声明一个默认构造函数。如果声明了构造函数就不会再创建默认的构造函数。c++不允许让引用该指向不同的对象，所以需要自己定义copy赋值操作符。</p>
+<h4 id="8-若不想使用编译器自动生成的函数，就应该明确拒绝"><a href="#8-若不想使用编译器自动生成的函数，就应该明确拒绝" class="headerlink" title="8.若不想使用编译器自动生成的函数，就应该明确拒绝"></a>8.若不想使用编译器自动生成的函数，就应该明确拒绝</h4><p>有很多类的对象时独一无二的，这是不需要拷贝构造函数和copy赋值运算符，实现这一目的的方法是在类中声明但不实现并且需要设置为私有的：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomeForSale</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	HomeForSale();</span><br><span class="line">	~HomeForSale();</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	HomeForSale(<span class="keyword">const</span> HomeForSale&amp;);</span><br><span class="line">	HomeForSale&amp; <span class="keyword">operator</span> = (<span class="keyword">const</span> HomeForSale&amp;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>但是如果在member函数或友元中访问，会出现链接错误，将连接期错误移至编译期是有可能的，只要将copy构造函数和copy assignment操作符声明为private就可以办到，但是在一个基类中。</p>
+<h4 id="9"><a href="#9" class="headerlink" title="9."></a>9.</h4>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjgxqyykx000afeqw65ra4w0a" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-网络（3）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/05/01/网络（3）/" class="article-date">
@@ -146,7 +197,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjgvwqouy000o88qw4ahl494p" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjgxqyyld000mfeqw8jgvmbwb" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -218,7 +269,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjgvwqouw000m88qw3dajjzfw" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjgxqyylc000kfeqwijm62v4d" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -312,7 +363,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjgvwqoul000d88qwml01s41t" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjgxqyyla000ifeqw82lg9yal" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -360,7 +411,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjgvwqoun000f88qw92vraayn" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjgxqyyl9000gfeqwv83aqe5t" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -432,7 +483,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjgvwqoup000h88qw2afnvpv8" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjgxqyyl7000efeqw8vw458px" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -509,7 +560,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjgvwqouj000b88qwttlt273a" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjgxqyyl5000cfeqwrpy9uhxh" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -581,7 +632,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjgvwqoub000988qw0zshx7jf" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjgxqyyjp0000feqwl8ijo9ti" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -629,7 +680,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjgvwqour000j88qwg9q1lslw" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjgxqyyli000qfeqwa5qddbgg" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -692,56 +743,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjgvwqou9000688qwi5c7eqdp" class="article-share-link">Teilen</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-LLVM学习（2）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/04/20/LLVM学习（2）/" class="article-date">
-  <time datetime="2018-04-20T03:15:52.000Z" itemprop="datePublished">2018-04-20</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/04/20/LLVM学习（2）/">LLVM学习（2）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>LLVM的pass框架是LLVM系统的重要部分。LLVM的优化和转换工作就是由多个pass来一起完成的的。类似流水线操作一样，每个pass完成特定的优化工作。所有的pass大致可以分成两类：分析和转换分析类的pass以提供信息为主，转换类的会修改中间代码。</p>
-<p>假如LLVM的安装目录为/root/CL/llvm，那么首先在路径/root/CL/llvm/lib/Transforms中创建一个子文件夹，例如名字为HelloWorld。然后在此文件夹下创建三个文件，可以从其他文件夹复制过来。然后需要修改上层目录（Transforms）中的CMakeLists.txt：需要修改三次文件名，修改为HelloWorld，内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">if( NOT LLVM_REQUIRES_RTTI )</span><br><span class="line">  if( NOT LLVM_REQUIRES_EH )</span><br><span class="line">    set(LLVM_EXPORTED_SYMBOL_FILE $&#123;CMAKE_CURRENT_SOURCE_DIR&#125;/HelloWorld.exports)</span><br><span class="line">  endif()</span><br><span class="line">endif()</span><br><span class="line"></span><br><span class="line">if(WIN32 OR CYGWIN)</span><br><span class="line">  set(LLVM_LINK_COMPONENTS Core Support)</span><br><span class="line">endif()</span><br><span class="line"></span><br><span class="line">add_llvm_loadable_module( LLVMHelloWorld</span><br><span class="line">  HelloWorld.cpp</span><br><span class="line"></span><br><span class="line">  DEPENDS</span><br><span class="line">  intrinsics_gen</span><br><span class="line">  PLUGIN_TOOL</span><br><span class="line">  opt</span><br><span class="line">  )</span><br></pre></td></tr></table></figure></p>
-<p>上述build script中的如下部分：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">add_llvm_loadable_module( LLVMHelloWorld</span><br><span class="line">  HelloWorld.cpp  </span><br><span class="line"></span><br><span class="line">  PLUGIN_TOOL  </span><br><span class="line">  opt  </span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
-<p>这种写法指定当前目录中的HelloWorld.cpp文件编译并链接到共享对象../lib/LLVMHelloWorld.so中，该选项可以通过opt选项工具进行动态加载。如果操作系统使用.so之外的后缀（windows或mac）,则将使用相应的扩展名。</p>
-<p>接下来是pass文件中的具体内容，这个pass文件实际上就是一个.cpp文件，内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;llvm/IR/Function.h&quot;  </span><br><span class="line">#include &quot;llvm/Pass.h&quot;  </span><br><span class="line">#include &quot;llvm/Support/raw_ostream.h&quot;  </span><br><span class="line"></span><br><span class="line">using namespace llvm;  </span><br><span class="line"></span><br><span class="line">#define DEBUG_TYPE &quot;hello&quot;  </span><br><span class="line"></span><br><span class="line">namespace &#123;  </span><br><span class="line">  struct HelloWorld : public FunctionPass &#123;  </span><br><span class="line">    static char ID; // Pass identification, replacement for typeid  </span><br><span class="line">    HelloWorld() : FunctionPass(ID) &#123;&#125;  </span><br><span class="line"></span><br><span class="line">    bool runOnFunction(Function &amp;F) override &#123;  </span><br><span class="line">        errs() &lt;&lt; &quot;HelloWorld: &quot;;  </span><br><span class="line">        errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;  </span><br><span class="line">        return false;  </span><br><span class="line">    &#125;  </span><br><span class="line">  &#125;;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line">char MyHello::ID = 0;  </span><br><span class="line">static RegisterPass&lt;HelloWorld&gt; X(&quot;helloWorld&quot;, &quot;Hello World Pass&quot;);</span><br></pre></td></tr></table></figure></p>
-<p>代码1~3行首先需要引入用到的LLVM头文件，之后DEBUG_TYPE是LLVM用来统计该pass被呼叫的次数或者使用DEBUG输出出错信息时使用的。引用llvm命名空间，这不是好的习惯，但是较为方便。<br><br>使用匿名namespace，避免与export中的symbol冲突，其中HelloWorld继承FunctionPass，代表HelloWorld Pass的输入时以Function为单位。以下代码是重中之重,LLVM会以Function为单位作为参数传递，将每个Function的名称打印出来：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">bool runOnFunction(Function &amp;F) override &#123;  </span><br><span class="line">    errs() &lt;&lt; &quot;HelloWorld: &quot;;  </span><br><span class="line">    errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;  </span><br><span class="line">    return false;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>所有的Function pass独立的执行每一个函数。实现一个Function pass通常很简单，Function pass可能会重载三个虚方法（例如runOnFunction）。所有这些方法如果修改程序则返回true，否则返回false。</p>
-<p>接下来需要build LLVM，进入/root/CL/build目录中，直接make即可。在自己的环境下不到一分钟就可以完成。出现下图时，表示已经make完成，这时在/root/CL/build/lib中出现LLVMHelloWorld.so文件。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">[ 95%] Built target llvm-opt-report</span><br><span class="line">[ 96%] Built target llvm-pdbutil</span><br><span class="line">[ 96%] Built target RcTableGen</span><br><span class="line">[ 96%] Built target llvm-rc</span><br><span class="line">[ 96%] Built target llvm-readobj</span><br><span class="line">[ 96%] Built target llvm-readelf</span><br><span class="line">[ 96%] Built target llvm-rtdyld</span><br><span class="line">[ 96%] Built target llvm-size</span><br><span class="line">[ 96%] Built target llvm-special-case-list-fuzzer</span><br><span class="line">[ 96%] Built target llvm-split</span><br><span class="line">[ 96%] Built target llvm-stress</span><br><span class="line">[ 96%] Built target llvm-strings</span><br><span class="line">[ 96%] Built target llvm-symbolizer</span><br><span class="line">[ 98%] Built target llvm-xray</span><br><span class="line">[ 98%] Built target obj2yaml</span><br><span class="line">[ 98%] Built target opt</span><br><span class="line">[ 98%] Built target sancov</span><br><span class="line">[ 98%] Built target sanstats</span><br><span class="line">[ 98%] Built target verify-uselistorder</span><br><span class="line">[100%] Built target yaml2obj</span><br><span class="line">[100%] Built target SecondLib</span><br><span class="line">[100%] Built target PipSqueak</span><br><span class="line">[100%] Built target DynamicLibraryLib</span><br><span class="line">[100%] Built target gtest_main</span><br></pre></td></tr></table></figure></p>
-<p>然后可以在期望位置建立新的测试文件，例如cul.cpp内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">int add(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a + b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int sub(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a - b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int mul(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a * b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int divi(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a / b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>使用clang++ cul.cpp -O3 -S -emit-llvm -o cul.ll命令进行编译，生成.ll文件。然后执行pass，方法如下。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">opt -load ../CL/build/lib/LLVMHelloWorld.so -helloWorld  cul.ll</span><br></pre></td></tr></table></figure></p>
-<p>输出结果如下,由此可见pass的作用是逐个的在提示符”Hello”后输出程序中函数的名称：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze84k9sdnqv3f0fuhpwz LLVMCODE]# opt -load ../CL/build/lib/LLVMHelloWorld.so -helloWorld  cul.ll</span><br><span class="line">WARNING: You&apos;re attempting to print out a bitcode file.</span><br><span class="line">This is inadvisable as it may cause display problems. If</span><br><span class="line">you REALLY want to taste LLVM bitcode first-hand, you</span><br><span class="line">can force output with the `-f&apos; option.</span><br><span class="line"></span><br><span class="line">Hello: _Z3addii</span><br><span class="line">Hello: _Z3subii</span><br><span class="line">Hello: _Z3mulii</span><br><span class="line">Hello: _Z4diviii</span><br></pre></td></tr></table></figure></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjgvwqou5000488qwmcvh6ay6" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjgxqyykr0006feqwyb87xrwp" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -771,7 +773,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/effective-c/">effective c++</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
     </div>
   </div>
 
@@ -781,7 +783,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 10px;">effective c++</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
     </div>
   </div>
 
@@ -803,6 +805,10 @@
       <ul>
         
           <li>
+            <a href="/2018/05/08/effective-c-（1）/">effective c++（1）</a>
+          </li>
+        
+          <li>
             <a href="/2018/05/01/网络（3）/">网络（3）</a>
           </li>
         
@@ -816,10 +822,6 @@
         
           <li>
             <a href="/2018/04/27/线程（3）/">线程（3）</a>
-          </li>
-        
-          <li>
-            <a href="/2018/04/27/线程（2）/">线程（2）</a>
           </li>
         
       </ul>
