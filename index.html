@@ -62,6 +62,48 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-effective-c-（2）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/11/effective-c-（2）/" class="article-date">
+  <time datetime="2018-05-10T17:03:59.000Z" itemprop="datePublished">2018-05-11</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/05/11/effective-c-（2）/">effective-c++（2）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="10-别让异常逃离析构函数"><a href="#10-别让异常逃离析构函数" class="headerlink" title="10.别让异常逃离析构函数"></a>10.别让异常逃离析构函数</h4><p>析构函数绝对不要吐出异常。如果一个被析构函数调用的函数可能抛出异常，析构函数应该捕捉任何异常，然后吞下它们（不能传播）或结束程序。<br><br>如果客户需要对某个操作函数运行期间抛出的异常做出反应，那么<code>class</code>应该提供一个普通函数（而非在析构函数中）执行该操作。</p>
+<h4 id="11-绝不在构造和析构过程中调用virtual函数"><a href="#11-绝不在构造和析构过程中调用virtual函数" class="headerlink" title="11.绝不在构造和析构过程中调用virtual函数"></a>11.绝不在构造和析构过程中调用virtual函数</h4><h6 id="不要在构造函数中调用虚函数的原因"><a href="#不要在构造函数中调用虚函数的原因" class="headerlink" title="不要在构造函数中调用虚函数的原因"></a>不要在构造函数中调用虚函数的原因</h6><p>第一个原因，在概念上，构造函数的工作是为对象进行初始化。在构造函数完成之前，被构造的对象被认为“未完全生成”。当创建某个派生类的对象时，如果在它的基类的构造函数中调用虚函数，那么此时派生类的构造函数并未执行，所调用的函数可能操作还没有被初始化的成员，浙江导致灾难的发生。<br><br>第二个原因，即使想在构造函数中实现动态联编，在实现上也会遇到困难。这涉及到对象虚指针（vptr）的建立问题。在Visual C++中，包含虚函数的类对象的虚指针被安排在对象的起始地址处，并且虚函数表（vtable）的地址是由构造函数写入虚指针的。所以，一个类的构造函数在执行时，并不能保证该函数所能访问到的虚指针就是当前被构造对象最后所拥有的虚指针，因为后面派生类的构造函数会对当前被构造对象的虚指针进行重写，因此无法完成动态联编。</p>
+<h6 id="不要在析构函数中调用虚函数的原因"><a href="#不要在析构函数中调用虚函数的原因" class="headerlink" title="不要在析构函数中调用虚函数的原因"></a>不要在析构函数中调用虚函数的原因</h6><p>从概念上说，析构函数是用来销毁一个对象的，在销毁一个对象时，先调用该对象所属类的析构函数，然后再调用其基类的析构函数，所以，在调用基类的析构函数时，派生类对象的“善后”工作已经完成了，这个时候再调用在派生类中定义的函数版本已经没有意义了。</p>
+<h4 id="12-令operator-返回一个reference-to-this"><a href="#12-令operator-返回一个reference-to-this" class="headerlink" title="12. 令operator=返回一个reference to * this"></a>12. 令operator=返回一个reference to * this</h4><p>为了实现连锁赋值，赋值操作符必须返回一个reference指向操作符的左侧实参。这份协议被所有内置类型和标准程序库提供的类型如string、vector、complex等共同遵守，例如：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Widget</span>&#123;</span></span><br><span class="line">    Widget &amp; <span class="keyword">operator</span>=(<span class="keyword">const</span> Widget &amp;w)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> * <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<h4 id="13-在operator-中处理“自我赋值”"><a href="#13-在operator-中处理“自我赋值”" class="headerlink" title="13. 在operator=中处理“自我赋值”"></a>13. 在operator=中处理“自我赋值”</h4>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjh0s93e4000c1pqwvqyk83h6" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-effective-c-（1）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/05/08/effective-c-（1）/" class="article-date">
@@ -103,7 +145,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjgxwu9uj000ayhqw6m7x9yat" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjh0s93ds000a1pqw6iqw3du6" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -199,7 +241,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjgxwu9v1000myhqwkt3w4wow" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjh0s93es000o1pqwf5ho3yfu" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -271,7 +313,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjgxwu9uz000kyhqw2pitcxy9" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjh0s93el000m1pqwwz8t7xyb" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -365,7 +407,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjgxwu9ux000iyhqwh6qx59qp" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjh0s93ej000k1pqwjggkinii" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -413,7 +455,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjgxwu9ut000gyhqw7oei6imq" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjh0s93eh000i1pqw2u8str97" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -485,7 +527,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjgxwu9ur000eyhqwkf6wqxjr" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjh0s93ee000g1pqwf47nqk4y" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -562,7 +604,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjgxwu9up000cyhqwhlgg72pn" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjh0s93e6000e1pqwybdmj36i" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -634,7 +676,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjgxwu9t20000yhqw7dfhxxut" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjh0s93cl00001pqwmfqa4gvg" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -682,73 +724,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjgxwu9v4000qyhqwr63cuhqn" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjh0s93ew000s1pqwvmygozqk" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-LLVM学习（3）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/04/22/LLVM学习（3）/" class="article-date">
-  <time datetime="2018-04-21T16:37:24.000Z" itemprop="datePublished">2018-04-22</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/04/22/LLVM学习（3）/">LLVM学习（3）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>上一篇通过简单的HelloWorld演示了在LLVM中编写Pass的基本方法，本文将介绍一些其他的pass实例,创建以及修改pass文件以及build llvm等内容不再重复。<br>首先在LLVM中，程序的基本单位是模块。函数是模块的基本组成单位，一个模块由一个或多个函数组成。Basic Block又是函数的基本组成单位，所以一个Function由一个或多个Basic block组成。指令是Basic Block的基本组成单位，一个Basic Block由一个或多个指令组成。<br><br>Module—&gt;Function—&gt;Basic Block—&gt;instruction</p>
-<h5 id="利用pass在函数中遍历Basic-Block"><a href="#利用pass在函数中遍历Basic-Block" class="headerlink" title="利用pass在函数中遍历Basic Block"></a>利用pass在函数中遍历Basic Block</h5><p>本文中直接在HelloWorld.cpp中进行修改，内容修改如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">#include &quot;llvm/ADT/Statistic.h&quot;</span><br><span class="line">#include &quot;llvm/IR/Function.h&quot;</span><br><span class="line">#include &quot;llvm/Pass.h&quot;</span><br><span class="line">#include &quot;llvm/Support/raw_ostream.h&quot;</span><br><span class="line">using namespace llvm;</span><br><span class="line"></span><br><span class="line">#define DEBUG_TYPE &quot;hello&quot;</span><br><span class="line"></span><br><span class="line">STATISTIC(HelloCounter, &quot;Counts number of functions greeted&quot;);</span><br><span class="line"></span><br><span class="line">namespace &#123;</span><br><span class="line">  struct HelloWorld : public FunctionPass &#123;</span><br><span class="line">    static char ID; // Pass identification, replacement for typeid</span><br><span class="line">    HelloWorld() : FunctionPass(ID) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    bool runOnFunction(Function &amp;F) override &#123;</span><br><span class="line">      errs() &lt;&lt; &quot;Function name: &quot;;</span><br><span class="line">      errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;</span><br><span class="line"></span><br><span class="line">      for(Function::iterator bb = F.begin(); bb != F.end(); bb++)</span><br><span class="line">      &#123;   </span><br><span class="line">        errs() &lt;&lt; &quot;BasicBlock name = &quot; &lt;&lt; bb-&gt;getName() &lt;&lt; &quot;\n&quot;;</span><br><span class="line">        errs() &lt;&lt; &quot;BasicBlock size = &quot; &lt;&lt; bb-&gt;size() &lt;&lt; &quot;\n\n&quot;;</span><br><span class="line">        for(BasicBlock::iterator i = bb-&gt;begin(); i != bb-&gt;end(); i++)</span><br><span class="line">        &#123;   </span><br><span class="line">            outs() &lt;&lt; &quot; &quot; &lt;&lt; *i &lt;&lt; &quot;\n&quot;;</span><br><span class="line">        &#125;   </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return false;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">char HelloWorld::ID = 0;</span><br><span class="line">static RegisterPass&lt;HelloWorld&gt; X(&quot;helloWorld&quot;, &quot;Hello World Pass&quot;);</span><br></pre></td></tr></table></figure></p>
-<p>代码首先打印每个函数的名称，接下来使用迭代器对每个函数中的Basic Block进行遍历，并且输出每个Basic Block的名称和大小。然后对每个Basic Block中的指令进行遍历。输出每条具体指令。接下来创建测试文件cul.cpp，内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;iostream&gt;</span><br><span class="line">using namespace std;</span><br><span class="line"></span><br><span class="line">int add(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a + b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int mul(int a, int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a * b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">    cout &lt;&lt; add(1, 2) &lt;&lt; endl;</span><br><span class="line">    cout &lt;&lt; mul(5, 6) &lt;&lt; endl;</span><br><span class="line">  return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>接下来使用以下命令执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">clang++ cul.cpp -O0 -S -emit-llvm -o cul.ll</span><br><span class="line">opt -load ../CL/build/lib/LLVMHelloWorld.so -helloWorld cul.ll</span><br></pre></td></tr></table></figure></p>
-<p>输出结果如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">WARNING: You&apos;re attempting to print out a bitcode file.</span><br><span class="line">This is inadvisable as it may cause display problems. If</span><br><span class="line">you REALLY want to taste LLVM bitcode first-hand, you</span><br><span class="line">can force output with the `-f&apos; option.</span><br><span class="line"></span><br><span class="line">Function name: __cxx_global_var_init</span><br><span class="line">BasicBlock name =</span><br><span class="line">BasicBlock size = 3</span><br><span class="line"></span><br><span class="line">   call void @_ZNSt8ios_base4InitC1Ev(%&quot;class.std::ios_base::Init&quot;* @_ZStL8__ioinit)</span><br><span class="line">   %1 = call i32 @__cxa_atexit(void (i8*)* bitcast (void (%&quot;class.std::ios_base::Init&quot;*)* @_ZNSt8ios_base4InitD1Ev to void (i8*)*), i8* getelementptr inbounds (%&quot;class.std::ios_base::Init&quot;, %&quot;class.std::ios_base::Init&quot;* @_ZStL8__ioinit, i32 0, i32 0), i8* @__dso_handle) #3</span><br><span class="line">   ret void</span><br><span class="line">Function name: _Z3addii</span><br><span class="line">BasicBlock name =</span><br><span class="line">BasicBlock size = 8</span><br><span class="line"></span><br><span class="line">   %3 = alloca i32, align 4</span><br><span class="line">   %4 = alloca i32, align 4</span><br><span class="line">   store i32 %0, i32* %3, align 4</span><br><span class="line">   store i32 %1, i32* %4, align 4</span><br><span class="line">   %5 = load i32, i32* %3, align 4</span><br><span class="line">   %6 = load i32, i32* %4, align 4</span><br><span class="line">   %7 = add nsw i32 %5, %6</span><br><span class="line">   ret i32 %7</span><br><span class="line">Function name: _Z3mulii</span><br><span class="line">BasicBlock name =</span><br><span class="line">BasicBlock size = 8</span><br><span class="line"></span><br><span class="line">   %3 = alloca i32, align 4</span><br><span class="line">   %4 = alloca i32, align 4</span><br><span class="line">   store i32 %0, i32* %3, align 4</span><br><span class="line">   store i32 %1, i32* %4, align 4</span><br><span class="line">   %5 = load i32, i32* %3, align 4</span><br><span class="line">   %6 = load i32, i32* %4, align 4</span><br><span class="line">   %7 = mul nsw i32 %5, %6</span><br><span class="line">   ret i32 %7</span><br><span class="line">Function name: main</span><br><span class="line">BasicBlock name =</span><br><span class="line">BasicBlock size = 9</span><br><span class="line"></span><br><span class="line">   %1 = alloca i32, align 4</span><br><span class="line">   store i32 0, i32* %1, align 4</span><br><span class="line">   %2 = call i32 @_Z3addii(i32 1, i32 2)</span><br><span class="line">   %3 = call dereferenceable(272) %&quot;class.std::basic_ostream&quot;* @_ZNSolsEi(%&quot;class.std::basic_ostream&quot;* @_ZSt4cout, i32 %2)</span><br><span class="line">   %4 = call dereferenceable(272) %&quot;class.std::basic_ostream&quot;* @_ZNSolsEPFRSoS_E(%&quot;class.std::basic_ostream&quot;* %3, %&quot;class.std::basic_ostream&quot;* (%&quot;class.std::basic_ostream&quot;*)* @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)</span><br><span class="line">   %5 = call i32 @_Z3mulii(i32 5, i32 6)</span><br><span class="line">   %6 = call dereferenceable(272) %&quot;class.std::basic_ostream&quot;* @_ZNSolsEi(%&quot;class.std::basic_ostream&quot;* @_ZSt4cout, i32 %5)</span><br><span class="line">   %7 = call dereferenceable(272) %&quot;class.std::basic_ostream&quot;* @_ZNSolsEPFRSoS_E(%&quot;class.std::basic_ostream&quot;* %6, %&quot;class.std::basic_ostream&quot;* (%&quot;class.std::basic_ostream&quot;*)* @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)</span><br><span class="line">   ret i32 0</span><br><span class="line">Function name: _GLOBAL__sub_I_cul.cpp</span><br><span class="line">BasicBlock name =</span><br><span class="line">BasicBlock size = 2</span><br><span class="line"></span><br><span class="line">   call void @__cxx_global_var_init()</span><br><span class="line">   ret void</span><br></pre></td></tr></table></figure>
-<p>由结果可知，共执行了五个函数，每个函数有一个基本块（Basic Block），每个基本块的size即为基本块中指令的数量。</p>
-<h5 id="利用pass对程序中的操作码进行计数"><a href="#利用pass对程序中的操作码进行计数" class="headerlink" title="利用pass对程序中的操作码进行计数"></a>利用pass对程序中的操作码进行计数</h5><p>代码中主要使用map对每个函数中出现的操作码进行统计，对每一条指令可以使用getOpcodeName获取操作码。主要代码如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">bool runOnFunction(Function &amp;F) override &#123;</span><br><span class="line">  std::map&lt;std::string, int&gt; m;</span><br><span class="line">  std::map&lt;std::string, int&gt;::iterator iter;</span><br><span class="line">  errs() &lt;&lt; &quot;Function name: &quot;;</span><br><span class="line">  errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;</span><br><span class="line"></span><br><span class="line">  for(Function::iterator bb = F.begin(); bb != F.end(); bb++)</span><br><span class="line">  &#123;   </span><br><span class="line">    errs() &lt;&lt; &quot;BasicBlock size = &quot; &lt;&lt; bb-&gt;size() &lt;&lt; &quot;\n&quot;;</span><br><span class="line">    for(BasicBlock::iterator i = bb-&gt;begin(); i != bb-&gt;end(); i++)</span><br><span class="line">    &#123;   </span><br><span class="line">        std::string tmpName = i-&gt;getOpcodeName();</span><br><span class="line">        if(m.find(tmpName) == m.end())</span><br><span class="line">        &#123;   </span><br><span class="line">            m[tmpName] = 1;</span><br><span class="line">        &#125;   </span><br><span class="line">        else</span><br><span class="line">            m[tmpName]++;</span><br><span class="line">    &#125;   </span><br><span class="line">  &#125;   </span><br><span class="line"></span><br><span class="line">  for(iter = m.begin(); iter != m.end(); iter++)</span><br><span class="line">  &#123;   </span><br><span class="line">    errs() &lt;&lt; iter-&gt;first &lt;&lt; &quot; &quot; &lt;&lt; iter-&gt;second &lt;&lt; &quot;\n&quot;;</span><br><span class="line">  &#125;   </span><br><span class="line">  errs() &lt;&lt; &quot;\n&quot;;</span><br><span class="line">  m.clear();</span><br><span class="line">  return false;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>使用同样命令执行后结果如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">WARNING: You&apos;re attempting to print out a bitcode file.</span><br><span class="line">This is inadvisable as it may cause display problems. If</span><br><span class="line">you REALLY want to taste LLVM bitcode first-hand, you</span><br><span class="line">can force output with the `-f&apos; option.</span><br><span class="line"></span><br><span class="line">Function name: __cxx_global_var_init</span><br><span class="line">BasicBlock size = 3</span><br><span class="line">call 2</span><br><span class="line">ret 1</span><br><span class="line">Function name: _Z3addii</span><br><span class="line">BasicBlock size = 8</span><br><span class="line">add 1</span><br><span class="line">alloca 2</span><br><span class="line">load 2</span><br><span class="line">ret 1</span><br><span class="line">store 2</span><br><span class="line">Function name: _Z3mulii</span><br><span class="line">BasicBlock size = 8</span><br><span class="line">alloca 2</span><br><span class="line">load 2</span><br><span class="line">mul 1</span><br><span class="line">ret 1</span><br><span class="line">store 2</span><br><span class="line">Function name: main</span><br><span class="line">BasicBlock size = 9</span><br><span class="line">alloca 1</span><br><span class="line">call 6</span><br><span class="line">ret 1</span><br><span class="line">store 1</span><br><span class="line">Function name: _GLOBAL__sub_I_cul.cpp</span><br><span class="line">BasicBlock size = 2</span><br><span class="line">call 1</span><br><span class="line">ret 1</span><br></pre></td></tr></table></figure></p>
-<p>通过结果可知，每个基本块的大小与所有操作码数量之和是相同的。</p>
-<h5 id="Def-Use-and-Use-Def"><a href="#Def-Use-and-Use-Def" class="headerlink" title="Def-Use and Use-Def"></a>Def-Use and Use-Def</h5><p>Def-Use实现的功能是找出所有使用了某一个def（或称value）的instruction。Use-Def实现的功能是针对某一个instruction输出其所使用的所有operands（操作数）.</p>
-<blockquote>
-<p><strong>Def-Use:</strong> Frequently, we might have an instance of the Value Class and we want to determine which Users use the Value. The list of all Users of a particular Value is called a def-use chain.<br>let’s say we have a Function* named F to a particular function foo. Finding all of the instructions that use foo is as simple as iterating over the def-use chain of F:</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Function *F = ...;    </span><br><span class="line">for (User *U : F-&gt;users()) &#123;  </span><br><span class="line">  if (Instruction *Inst = dyn_cast&lt;Instruction&gt;(U)) &#123;  </span><br><span class="line">    errs() &lt;&lt; &quot;F is used in instruction:\n&quot;;  </span><br><span class="line">    errs() &lt;&lt; *Inst &lt;&lt; &quot;\n&quot;;  </span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>代码中使用到了动态类型转换dyn_cast&lt;&gt;,用来检测操作数是否是特定的类型，如果是的话则返回指针（不能使用引用），否则的话就返回空指针，dyn_cast与c++中的dynamic_cast类似，与c++不同的是dynamic_cast只能在拥有虚函数表的类中使用：通常dyn_cast运算符在if语句或其他控制语句中使用，如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if (auto *AI = dyn_cast&lt;AllocationInst&gt;(Val)) &#123;</span><br><span class="line">  // ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>这种形式的语句将isa&lt;&gt;和cast&lt;&gt;结合在一起，较为方便。isa&lt;&gt;类似于java的”instanceof”, cast&lt;&gt;将一个指针或引用从基类转换为派生类。最终代码如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">bool runOnFunction(Function &amp;F) override &#123;</span><br><span class="line">  errs() &lt;&lt; &quot;Function name: &quot;;</span><br><span class="line">  errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;</span><br><span class="line"></span><br><span class="line">  for(Function::iterator bb = F.begin(); bb != F.end(); bb++)</span><br><span class="line">  &#123;   </span><br><span class="line">    errs() &lt;&lt; &quot;BasicBlock size = &quot; &lt;&lt; bb-&gt;size() &lt;&lt; &quot;\n&quot;;</span><br><span class="line">    for(BasicBlock::iterator i = bb-&gt;begin(); i != bb-&gt;end(); i++)</span><br><span class="line">    &#123;   </span><br><span class="line">        Instruction* inst = dyn_cast&lt;Instruction&gt;(i);</span><br><span class="line">        if(inst-&gt;getOpcode() == Instruction::Add || inst-&gt;getOpcode() == Instruction::Mul)</span><br><span class="line">        &#123;   </span><br><span class="line">            for(User *U: inst-&gt;users())</span><br><span class="line">            &#123;   </span><br><span class="line">                if(Instruction *Inst = dyn_cast&lt;Instruction&gt;(U))</span><br><span class="line">                &#123;   </span><br><span class="line">                    outs() &lt;&lt; &quot;Opcode &quot; &lt;&lt; inst-&gt;getOpcodeName() &lt;&lt; &quot; used in ::&quot;;</span><br><span class="line">                    outs() &lt;&lt; *Inst &lt;&lt; &quot;\n&quot;;</span><br><span class="line">                &#125;   </span><br><span class="line">            &#125;   </span><br><span class="line">        &#125;   </span><br><span class="line">    &#125;   </span><br><span class="line">  &#125;   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>采用之前的测试c++代码，输出结果如下,由上面的.ll程序可知，首先在函数中使用add和mul指令，然后在下一行ret指令中使用到了运算生成的变量。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze84k9sdnqv3f0fuhpwz LLVMCODE]# opt -load ../CL/build/lib/LLVMHelloWorld.so -helloWorld cul.ll</span><br><span class="line">WARNING: You&apos;re attempting to print out a bitcode file.</span><br><span class="line">This is inadvisable as it may cause display problems. If</span><br><span class="line">you REALLY want to taste LLVM bitcode first-hand, you</span><br><span class="line">can force output with the `-f&apos; option.</span><br><span class="line"></span><br><span class="line">Function name: __cxx_global_var_init</span><br><span class="line">BasicBlock size = 3</span><br><span class="line">Function name: _Z3addii</span><br><span class="line">BasicBlock size = 8</span><br><span class="line">Opcode add used in ::  ret i32 %7</span><br><span class="line">Function name: _Z3mulii</span><br><span class="line">BasicBlock size = 8</span><br><span class="line">Opcode mul used in ::  ret i32 %7</span><br><span class="line">Function name: main</span><br><span class="line">BasicBlock size = 9</span><br><span class="line">Function name: _GLOBAL__sub_I_cul.cpp</span><br><span class="line">BasicBlock size = 2</span><br></pre></td></tr></table></figure></p>
-<blockquote>
-<p><strong>Use-Def</strong> Alternatively, it’s common to have an instance of the User Class and need to know what Values are used by it. The list of all Values used by a User is known as a use-def chain. Instances of class Instruction are common User s, so we might want to iterate over all of the values that a particular instruction uses (that is, the operands of the particular Instruction):</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Instruction *pi = ...;  </span><br><span class="line"></span><br><span class="line">for (Use &amp;U : pi-&gt;operands()) &#123;  </span><br><span class="line">  Value *v = U.get();  </span><br><span class="line">  // ...  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>主要代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">bool runOnFunction(Function &amp;F) override &#123;</span><br><span class="line">  errs() &lt;&lt; &quot;Function name: &quot;;</span><br><span class="line">  errs() &lt;&lt; F.getName() &lt;&lt; &apos;\n&apos;;</span><br><span class="line"></span><br><span class="line">  for(Function::iterator bb = F.begin(); bb != F.end(); bb++)</span><br><span class="line">  &#123;   </span><br><span class="line">    errs() &lt;&lt; &quot;BasicBlock size = &quot; &lt;&lt; bb-&gt;size() &lt;&lt; &quot;\n&quot;;</span><br><span class="line">    for(BasicBlock::iterator i = bb-&gt;begin(); i != bb-&gt;end(); i++)</span><br><span class="line">    &#123;   </span><br><span class="line">        Instruction* inst = dyn_cast&lt;Instruction&gt;(i);</span><br><span class="line">        if(inst-&gt;getOpcode() == Instruction::Add || inst-&gt;getOpcode() == Instruction::Mul)</span><br><span class="line">        &#123;   </span><br><span class="line">            for(Use &amp;U: inst-&gt;operands())</span><br><span class="line">            &#123;   </span><br><span class="line">                Value *v = U.get();</span><br><span class="line">                outs() &lt;&lt; *v &lt;&lt; &quot;\n&quot;;</span><br><span class="line">            &#125;   </span><br><span class="line">        &#125;   </span><br><span class="line">    &#125;   </span><br><span class="line">  &#125;   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>采用之前的测试c++代码，输出结果如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[root@iz2ze84k9sdnqv3f0fuhpwz LLVMCODE]# opt -load ../CL/build/lib/LLVMHelloWorld.so -helloWorld cul.ll</span><br><span class="line">WARNING: You&apos;re attempting to print out a bitcode file.</span><br><span class="line">This is inadvisable as it may cause display problems. If</span><br><span class="line">you REALLY want to taste LLVM bitcode first-hand, you</span><br><span class="line">can force output with the `-f&apos; option.</span><br><span class="line"></span><br><span class="line">Function name: __cxx_global_var_init</span><br><span class="line">BasicBlock size = 3</span><br><span class="line">Function name: _Z3addii</span><br><span class="line">BasicBlock size = 8</span><br><span class="line">  %5 = load i32, i32* %3, align 4</span><br><span class="line">  %6 = load i32, i32* %4, align 4</span><br><span class="line">Function name: _Z3mulii</span><br><span class="line">BasicBlock size = 8</span><br><span class="line">  %5 = load i32, i32* %3, align 4</span><br><span class="line">  %6 = load i32, i32* %4, align 4</span><br><span class="line">Function name: main</span><br><span class="line">BasicBlock size = 9</span><br><span class="line">Function name: _GLOBAL__sub_I_cul.cpp</span><br><span class="line">BasicBlock size = 2</span><br></pre></td></tr></table></figure></p>
-<p>由上输出结果可知，分别输出了add指令和mul指令的两个操作数。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjgxwu9ue0006yhqwilweqtj5" class="article-share-link">Teilen</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
 
     </footer>
   </div>
@@ -785,7 +764,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 10px;">effective c++</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 15px;">effective c++</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
     </div>
   </div>
 
@@ -807,6 +786,10 @@
       <ul>
         
           <li>
+            <a href="/2018/05/11/effective-c-（2）/">effective-c++（2）</a>
+          </li>
+        
+          <li>
             <a href="/2018/05/08/effective-c-（1）/">effective c++（1）</a>
           </li>
         
@@ -820,10 +803,6 @@
         
           <li>
             <a href="/2018/04/27/网络（1）/">网络（1）</a>
-          </li>
-        
-          <li>
-            <a href="/2018/04/27/线程（3）/">线程（3）</a>
           </li>
         
       </ul>
