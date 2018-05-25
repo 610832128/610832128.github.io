@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>false sharing相关 | 小白拜拜拜</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="false sharinghalts问题不存在一个程序（算法），它能够计算任何程序（算法）在给定输入上是否会结束（停机）。1234567891011121314151617bool God_algo(char* program, char* input)&amp;#123; //提供一段程序和输入可以判断在这个输入上是否会停机。    if(&amp;lt;program&amp;gt; halts on &amp;lt;inp">
+<meta name="keywords" content="false sharing">
+<meta property="og:type" content="article">
+<meta property="og:title" content="false sharing相关">
+<meta property="og:url" content="http://yoursite.com/2018/05/25/false-sharing相关/index.html">
+<meta property="og:site_name" content="小白拜拜拜">
+<meta property="og:description" content="false sharinghalts问题不存在一个程序（算法），它能够计算任何程序（算法）在给定输入上是否会结束（停机）。1234567891011121314151617bool God_algo(char* program, char* input)&amp;#123; //提供一段程序和输入可以判断在这个输入上是否会停机。    if(&amp;lt;program&amp;gt; halts on &amp;lt;inp">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-05-25T13:46:07.788Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="false sharing相关">
+<meta name="twitter:description" content="false sharinghalts问题不存在一个程序（算法），它能够计算任何程序（算法）在给定输入上是否会结束（停机）。1234567891011121314151617bool God_algo(char* program, char* input)&amp;#123; //提供一段程序和输入可以判断在这个输入上是否会停机。    if(&amp;lt;program&amp;gt; halts on &amp;lt;inp">
+  
+    <link rel="alternate" href="/atom.xml" title="小白拜拜拜" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">小白拜拜拜</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-false-sharing相关" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/25/false-sharing相关/" class="article-date">
+  <time datetime="2018-05-25T13:45:30.000Z" itemprop="datePublished">2018-05-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      false sharing相关
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="false-sharing"><a href="#false-sharing" class="headerlink" title="false sharing"></a>false sharing</h1><h2 id="halts问题"><a href="#halts问题" class="headerlink" title="halts问题"></a>halts问题</h2><p>不存在一个程序（算法），它能够计算任何程序（算法）在给定输入上是否会结束（停机）。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">God_algo</span><span class="params">(<span class="keyword">char</span>* program, <span class="keyword">char</span>* input)</span></span></span><br><span class="line"><span class="function"></span>&#123; <span class="comment">//提供一段程序和输入可以判断在这个输入上是否会停机。</span></span><br><span class="line">    <span class="keyword">if</span>(&lt;program&gt; halts on &lt;input&gt;)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">Satan_algo</span><span class="params">(<span class="keyword">char</span>* program)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(God_algo(program, program))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当<code>Satan_algo</code>运用在自身时，<code>Satan_algo(Satan_algo)</code>，会发生什么呢？<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Satan_algo(Satan_algo) 能够停机-&gt;不能停机</span><br><span class="line">Satan_algo(Satan_algo) 不能够停机-&gt;停机</span><br></pre></td></tr></table></figure></p>
+<p>停机问题本质是一阶逻辑的不自恰性和不完备性。类似的命题有理发师悖论、全能悖论等。</p>
+<h2 id="静态分析"><a href="#静态分析" class="headerlink" title="静态分析"></a>静态分析</h2><p>静态分析不能完美的确定一般程序的任何非平凡属性，静态分析的不可判定性实际上意味着任何自动化的静态分析系统,针对一个程序的非平凡属性(例如是否存在运行时错误),不可能做到既是可靠的又是完备的.可靠的(<code>sound</code>)静态分析意味着,如果分析结果没有报告某类运行时错误,则程序中肯定不存在某类运行时错误,也就是说没有漏报(<code>false negative</code>)。完备的(<code>complete</code>)静态分析意味着,如果分析结果报告了某类运行时错误,则程序中肯定存在某类运行时错误,也就是说没有误报(<code>false positive</code>)。</p>
+<p>静态分析的方法有很多,从路径抽象和近似的角度可以划分为路径敏感 方法和路径不敏感方法(<code>path-insensitive</code>).路径敏感方法考虑分支间的组合关系,能够区分控制流图上的不同路径信息.与路径敏感方法相比,路径不敏感方法由于分析更加粗糙将会引入更多的误报.最直接和详细的路径敏感分析方法是完整路径分析.完整路径分析准确记录每条不同路径上的“程序执行状态”,将导致指数复杂度甚至无限的状态空间.</p>
+<h3 id="数据流问题解"><a href="#数据流问题解" class="headerlink" title="数据流问题解"></a>数据流问题解</h3><p>典型的解包括</p>
+<ol>
+<li><code>IDEAL</code>：理想解，也称真实解，对程序入口到某程序点的所有实际可执行路径的尾端值取聚合(<code>meet</code>)操作，则得到理想解，求理想解是一个不可判定问题。</li>
+<li><code>MOP(meet over all paths)</code>：称为全路径聚合解，对程序入口到某程序点的所有路径的尾端值取聚合操作，得到<code>MOP</code>解。</li>
+<li><code>MFP(maximal fixed point)</code>：最大不动点解，所谓的最大不动点解是对控制流图上节点的数据流方程进行不断迭代最终收敛而得到的解。</li>
+</ol>
+<p>在程序<code>P</code>的执行过程中，程序的执行状态可由二元组<code>(l,p)</code>表示，其中<code>l</code>代表当前的程序执行位置，<code>p</code>代表该状态下的环境，程序环境记录了程序当前每个变量<code>X</code>的值。在环境<code>p</code>下，变量<code>X</code>的取值为<code>p(X)</code>。可以采用变量的抽象取值区间来表示变量的可能取值范围。<br>程序通过路径<code>S</code>执行到位置<code>l</code>，则<code>S</code>上的谓词和赋值操作对<code>l</code>处环境<code>p</code>中各变量的可能取值范围进行了限定。可以将<code>S</code>在<code>l</code>处限定的变量取值范围集合称作<code>S</code>在<code>l</code>处的路径条件，记为<code>R(S,l)</code>。<br>程序通过路径<code>S</code>执行到位置<code>l</code>，属性状态机的状态沿着<code>S</code>进行传递和变化。在<code>l</code>处到达状态<code>a</code>，将<code>R(S,l)</code>记录在<code>a</code>上，称为属性状态条件，包含条件的属性状态表示为<code>{a.R(S,l)}</code>。属性状态条件是到达该属性状态的相关变量可能取值的集合。它标记了能够到达当前属性状态的程序环境信息。属性状态条件可用于不可达路径判断。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjhm0ymt3000ep0qwgbmefe7z" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/false-sharing/">false sharing</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2018/05/14/面试复习（3）/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Älter</strong>
+      <div class="article-nav-title">面试复习（3）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/effective-c/">effective c++</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/false-sharing/">false sharing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 15px;">effective c++</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 20px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archiv</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">letzter Beitrag</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/05/25/false-sharing相关/">false sharing相关</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/14/面试复习（3）/">面试复习（3）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/11/effective-c-（2）/">effective-c++（2）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/08/effective-c-（1）/">effective c++（1）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/01/网络（3）/">网络（3）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+  </script>
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 小白拜拜拜<br>
+  	  <span id="busuanzi_container_site_pv">
+         本站总访问量<span id="busuanzi_value_site_pv"></span>次
+      </span> 
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
