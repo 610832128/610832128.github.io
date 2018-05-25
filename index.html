@@ -84,7 +84,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="false-sharing"><a href="#false-sharing" class="headerlink" title="false sharing"></a>false sharing</h1><h2 id="halts问题"><a href="#halts问题" class="headerlink" title="halts问题"></a>halts问题</h2><p>不存在一个程序（算法），它能够计算任何程序（算法）在给定输入上是否会结束（停机）。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">God_algo</span><span class="params">(<span class="keyword">char</span>* program, <span class="keyword">char</span>* input)</span></span></span><br><span class="line"><span class="function"></span>&#123; <span class="comment">//提供一段程序和输入可以判断在这个输入上是否会停机。</span></span><br><span class="line">    <span class="keyword">if</span>(&lt;program&gt; halts on &lt;input&gt;)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">Satan_algo</span><span class="params">(<span class="keyword">char</span>* program)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(God_algo(program, program))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+        <h2 id="halts问题"><a href="#halts问题" class="headerlink" title="halts问题"></a>halts问题</h2><p>不存在一个程序（算法），它能够计算任何程序（算法）在给定输入上是否会结束（停机）。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">God_algo</span><span class="params">(<span class="keyword">char</span>* program, <span class="keyword">char</span>* input)</span></span></span><br><span class="line"><span class="function"></span>&#123; <span class="comment">//提供一段程序和输入可以判断在这个输入上是否会停机。</span></span><br><span class="line">    <span class="keyword">if</span>(&lt;program&gt; halts on &lt;input&gt;)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">Satan_algo</span><span class="params">(<span class="keyword">char</span>* program)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(God_algo(program, program))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>当<code>Satan_algo</code>运用在自身时，<code>Satan_algo(Satan_algo)</code>，会发生什么呢？<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Satan_algo(Satan_algo) 能够停机-&gt;不能停机</span><br><span class="line">Satan_algo(Satan_algo) 不能够停机-&gt;停机</span><br></pre></td></tr></table></figure></p>
 <p>停机问题本质是一阶逻辑的不自恰性和不完备性。类似的命题有理发师悖论、全能悖论等。</p>
 <h2 id="静态分析"><a href="#静态分析" class="headerlink" title="静态分析"></a>静态分析</h2><p>静态分析不能完美的确定一般程序的任何非平凡属性，静态分析的不可判定性实际上意味着任何自动化的静态分析系统,针对一个程序的非平凡属性(例如是否存在运行时错误),不可能做到既是可靠的又是完备的.可靠的(<code>sound</code>)静态分析意味着,如果分析结果没有报告某类运行时错误,则程序中肯定不存在某类运行时错误,也就是说没有漏报(<code>false negative</code>)。完备的(<code>complete</code>)静态分析意味着,如果分析结果报告了某类运行时错误,则程序中肯定存在某类运行时错误,也就是说没有误报(<code>false positive</code>)。</p>
@@ -100,7 +100,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjhm0ymt3000ep0qwgbmefe7z" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjhm105l4000eqgqwkcr7ale2" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/false-sharing/">false sharing</a></li></ul>
@@ -142,7 +142,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjhm0ymtx000wp0qwyg4a752p" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjhm105m0000wqgqwybtohcu5" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -189,7 +189,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjhm0ymt1000cp0qw1c4wel5e" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjhm105l2000cqgqwj8jtm84o" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -242,7 +242,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjhm0ymsv000ap0qw7uy4ski9" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjhm105kz000aqgqw0h97892o" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -338,7 +338,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjhm0ymtp000qp0qwi7m98k1v" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjhm105lo000qqgqwy6hib04f" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -410,7 +410,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjhm0ymtl000op0qwxbgrfvcq" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjhm105ll000oqgqw3dz80pia" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -504,7 +504,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjhm0ymti000mp0qwydud6gif" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjhm105lg000mqgqwh24huroy" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -552,7 +552,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjhm0ymtg000kp0qwk86gjl9j" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjhm105le000kqgqwyc4tcvrr" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -624,7 +624,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjhm0ymt9000ip0qwu9sc2nyo" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjhm105lc000iqgqwyksg9br7" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -701,7 +701,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjhm0ymt7000gp0qwse7oyifl" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjhm105l9000gqgqw1onpzcjj" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
