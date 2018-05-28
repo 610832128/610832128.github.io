@@ -62,6 +62,70 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-effective-c-（3）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/29/effective-c-（3）/" class="article-date">
+  <time datetime="2018-05-28T17:32:12.000Z" itemprop="datePublished">2018-05-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/05/29/effective-c-（3）/">effective c++（3）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="16-在资源管理类中小心copying行为"><a href="#16-在资源管理类中小心copying行为" class="headerlink" title="16. 在资源管理类中小心copying行为"></a>16. 在资源管理类中小心copying行为</h4><p>当使用<code>C API</code>函数处理类型为<code>Mutex</code>的互斥器对象，共有<code>lock</code>和<code>unlock</code>两个函数可用：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lock</span><span class="params">(Mutex* pm)</span></span>;  <span class="comment">//锁定pm所指的互斥器</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">unlock</span><span class="params">(Mutex* pm)</span></span>;  <span class="comment">//将互斥器解除锁定</span></span><br></pre></td></tr></table></figure></p>
+<p>为确保不会忘记将锁住的<code>Mutex</code>解锁，可能需要由<code>RAII</code>守则支配的类来实现，即资源在构造期间获得，在析构期间释放：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Lock</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Lock(Mutex* pm)</span><br><span class="line">    :MutexPtr(pm)</span><br><span class="line">    &#123;</span><br><span class="line">        lock(MutexPtr);</span><br><span class="line">    &#125;</span><br><span class="line">    ~Lock()</span><br><span class="line">    &#123;</span><br><span class="line">        unlock(MutexPtr);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    Mutex *MutexPtr;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>但是当资源被复制时会出现问题，有两种解决方法：</p>
+<ol>
+<li><p>禁止复制，可以将<code>copying</code>操作声明为<code>private</code>。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Lock</span>:</span> <span class="keyword">private</span> Uncopyable&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>引用计数法，有时希望保持资源直到最后一个引用被销毁。<code>share_ptr</code>可以实现，它允许删除器作为第二个参数。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Lock</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function">explict <span class="title">Lock</span><span class="params">(Mutex* pm)</span></span></span><br><span class="line">    : MutexPtr(pm, unlock)</span><br><span class="line">    &#123;</span><br><span class="line">        lock(MutexPtr.get())</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">std</span>::tr1::share_ptr&lt;Mutex&gt; MutexPtr;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>此时不需要再声明为析构函数。</p>
+<ol>
+<li>复制底部资源，深度复制。</li>
+<li>转移底部资源的所有权，使用<code>auto_ptr</code>。将所有权由被复制物转移到目标物。</li>
+</ol>
+<h4 id="17-在资源管理类中提供对原始资源的访问"><a href="#17-在资源管理类中提供对原始资源的访问" class="headerlink" title="17. 在资源管理类中提供对原始资源的访问"></a>17. 在资源管理类中提供对原始资源的访问</h4><p>例如使用智能指针时，需要保存工厂函数如<code>createInvestment</code>的调用结果<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::tr1::share_ptr&lt;Investment&gt; pInv(createInvestment());</span><br></pre></td></tr></table></figure></p>
+<p>当希望以某个函数处理<code>Investment</code>对象，例如:<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">daysHeld</span><span class="params">(<span class="keyword">const</span> Investment* pi)</span></span>;</span><br><span class="line"><span class="keyword">int</span> days = daysHeld(pInv); <span class="comment">//如此调用会报错</span></span><br></pre></td></tr></table></figure></p>
+<p>有两个方法可以达成目标，智能指针内部提供<code>get</code>函数，用来执行显式转换，也就是会返回智能指针内部的原始指针：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> days = daysHeld(pInv.get());</span><br></pre></td></tr></table></figure></p>
+<p>同时智能指针也重载了取地址操作符，允许隐式的转换成底部原始指针。<br>例如与字体相关的类<code>Font</code>，它处理的是<code>FontHandler</code>，可以用两种方式进行转换。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">FontHandler <span class="title">getFont</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">releaseFont</span><span class="params">(FontHandler fh)</span></span>;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Font</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function">explict <span class="title">Font</span><span class="params">(FontHandler fh)</span></span></span><br><span class="line">    : f(fh) &#123;&#125;</span><br><span class="line">    ~Font()&#123;releaseFont(f);&#125;</span><br><span class="line">    <span class="function">FontHandler <span class="title">get</span><span class="params">()</span> <span class="keyword">const</span></span>&#123;<span class="keyword">return</span> f;&#125; <span class="comment">//显式转换</span></span><br><span class="line">    <span class="function">FontHandler <span class="title">operator</span><span class="params">()</span> <span class="keyword">const</span></span>&#123;<span class="keyword">return</span> f;&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    FontHandler f;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>隐式转换使得客户调用轻松自然。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ChangeFontSize</span><span class="params">(FontHandler f, <span class="keyword">int</span> newSize)</span></span>;</span><br><span class="line">Font f(getFont());</span><br><span class="line"><span class="keyword">int</span> newFontSize;</span><br><span class="line"></span><br><span class="line">ChangeFontSize(f.get(), newFontSize); <span class="comment">//显式</span></span><br><span class="line"></span><br><span class="line">changeFontSize(f, newFontSize); <span class="comment">//函数重载隐式调用</span></span><br><span class="line"></span><br><span class="line">Font f1(getFont());</span><br><span class="line">FontHandler f2 = f1;  <span class="comment">//愿意是拷贝Font对象，但是将f1隐式转换为FontHandler然后才复制</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="18-成对使用new和delete时要采取相同形式"><a href="#18-成对使用new和delete时要采取相同形式" class="headerlink" title="18. 成对使用new和delete时要采取相同形式"></a>18. 成对使用new和delete时要采取相同形式</h4><p>如果在表达式中使用[]，必须在相应的<code>delete</code>表达式中，也使用[]，如果在<code>new</code>表达式中不适用[],也不应该在相应的<code>delete</code>中使用[],否则结果未有定义。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">string</span> *stringPtr1 = <span class="keyword">new</span> <span class="built_in">string</span>;</span><br><span class="line"><span class="built_in">string</span> *stringPtr2 = <span class="keyword">new</span> <span class="built_in">string</span>[<span class="number">100</span>];</span><br><span class="line"><span class="keyword">delete</span> stringPtr1 <span class="comment">//删除一个对象;</span></span><br><span class="line"><span class="keyword">delete</span> []stringPtr2 <span class="comment">//删除一个对象组成的数组;</span></span><br></pre></td></tr></table></figure></p>
+<p>当时用<code>typedef</code>的时候情况更复杂，例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">typedef string AddressLines[4];</span><br><span class="line">string *pal = new AddressLines; //实际上此时是对象数组。</span><br><span class="line">delete pal;  //行为未有定义</span><br><span class="line">delete []pal;</span><br></pre></td></tr></table></figure></p>
+<h4 id="19-以独立语句将newd对象置入智能指针"><a href="#19-以独立语句将newd对象置入智能指针" class="headerlink" title="19. 以独立语句将newd对象置入智能指针"></a>19. 以独立语句将newd对象置入智能指针</h4><p>例如一个函数揭示处理程序的优先权，另一个函数用来在某动态分配所得的<code>Widget</code>上进行某些带有优先权的处理。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">priority</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">processWidget</span><span class="params">(share_ptr&lt;Widget&gt; pw, <span class="keyword">int</span> priority)</span></span>;</span><br><span class="line">processWidget(share_ptr&lt;Widget&gt;(<span class="keyword">new</span> Widget), priority()); <span class="comment">//可以通过编译</span></span><br></pre></td></tr></table></figure></p>
+<p>上述可能会出现资源泄露，在调用<code>processWidget</code>之前需要做三件事：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1调用priority</span><br><span class="line">2执行“new Widget”</span><br><span class="line">3调用shared_ptr构造函数</span><br></pre></td></tr></table></figure></p>
+<p><code>java</code>和<code>c#</code>会以特定次序完成参数核算，但c++不同，所以如果以213顺序执行并且1出错会引起资源泄露，解决方法就是以独立语句将<code>newd</code>对象置入智能指针。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/29/effective-c-（3）/" data-id="cjhqj7ddh000eivqw74jr94ca" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c-（3）/">effective c++（3）</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-false-sharing相关" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/05/25/false-sharing相关/" class="article-date">
@@ -100,7 +164,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjhm105l4000eqgqwkcr7ale2" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjhqj7ddk000givqwu003ea0f" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/false-sharing/">false sharing</a></li></ul>
@@ -142,7 +206,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjhm105m0000wqgqwybtohcu5" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjhqj7dea000yivqwtwkhlocp" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -189,7 +253,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjhm105l2000cqgqwj8jtm84o" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjhqj7ddc000civqwwfzap0cd" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -242,7 +306,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjhm105kz000aqgqw0h97892o" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjhqj7dd8000aivqw5r273j78" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -338,7 +402,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjhm105lo000qqgqwy6hib04f" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjhqj7de0000sivqw83iwmb4d" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -410,7 +474,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjhm105ll000oqgqw3dz80pia" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjhqj7ddy000qivqwxejv9ie1" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -504,7 +568,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjhm105lg000mqgqwh24huroy" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjhqj7ddw000oivqwnwzoztyb" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -552,7 +616,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjhm105le000kqgqwyc4tcvrr" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjhqj7ddt000mivqw08cuc74x" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -624,84 +688,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjhm105lc000iqgqwyksg9br7" class="article-share-link">Teilen</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-线程（1）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/04/26/线程（1）/" class="article-date">
-  <time datetime="2018-04-26T13:09:31.000Z" itemprop="datePublished">2018-04-26</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/04/26/线程（1）/">线程（1）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><code>main</code>函数是主线程，即使没有使用其他的线程，这条主线程也一直存在，主线程退出所有的线程整个程序就都退出了。使用<code>Thread</code>技术创建的线程，它们用于运行并发的任务。普通函数的调用是无法实现并行的任务的。</p>
-<h4 id="线程调度"><a href="#线程调度" class="headerlink" title="线程调度"></a>线程调度</h4><p>假如只有一个<code>CPU</code>，所有的线程共享这个<code>CPU</code>。</p>
-<ol>
-<li>每个线程都要自觉的让出<code>CPU</code>，使得其他线程也有机会被运行。可以使用<code>Sleep</code>实现。</li>
-<li>操作系统会把时间分割成很细的小片（时间片），让每个线程都会有机会运行几毫秒，轮流运行。（宏观上感觉是线程在并行执行）。</li>
-<li>使用<code>Sleep</code>函数让一个线程处于休眠状态，当一个线程休眠时，<code>CPU</code>会供其他线程使用。操作系统会统一进行调度，决定哪个线程被执行。</li>
-</ol>
-<h4 id="进程与线程"><a href="#进程与线程" class="headerlink" title="进程与线程"></a>进程与线程</h4><p>当<code>Task1.exe</code>被加载到内存中运行时，运行的实例成为一个进程。（可以在任务管理器中查看），<code>Task1.exe</code>称为程序文件，它可以同时被运行多次，每运行一次，一个新的进程就被创建。一个进程中可以创建多个线程，其中至少有一个主线程。由操作系统负责安排调度；决定哪一个线程被运行。不同操作系统遵循同一个原则，尽可能让所有的线程都有机会运行。</p>
-<h4 id="调度方法-时间片法："><a href="#调度方法-时间片法：" class="headerlink" title="调度方法 时间片法："></a>调度方法 时间片法：</h4><p>把<code>cpu</code>时间划分为均等的时间片，总体上看各个线程是被轮流运行的。线程切换过程如下：</p>
-<ol>
-<li>把当前的线程切到后台，进入队列等待。队列可以称为候选队列，表示里面的线程都希望自己被立刻执行。</li>
-<li>从队列中取得一个正在排队的线程并运行这个线程。</li>
-<li><code>5ms</code>后再次进行切换（时间片为<code>5ms</code>）</li>
-</ol>
-<p>需要知道</p>
-<ol>
-<li>使用<code>Sleep</code>函数，可以主动让自己的线程提前让出<code>CPU</code>。</li>
-<li><code>Sleep</code>时间到的时候，线程并不是立即执行的，而是进入了候选队列。如果设定了N毫秒，实际间隔的时间会大于N。一般会支持到毫秒量级。</li>
-<li>由操作系统决定如何在候选队列里挑选下一个线程。</li>
-</ol>
-<h4 id="优先级"><a href="#优先级" class="headerlink" title="优先级"></a>优先级</h4><p>某些操作系统可能支持线程的优先级，<code>Priority</code>。允许我们再创建线程的时候，指定一下线程的优先级。如果优先级较高，则该线程在运行的时候拥有较高的机会被调度。但是可能不可靠，不是所有的系统都支持，并且可能无法定量。</p>
-<h4 id="线程创建与启动"><a href="#线程创建与启动" class="headerlink" title="线程创建与启动"></a>线程创建与启动</h4><p>例如使用<code>osapi</code>库，定义一个Task类，继承于<code>OS_Thread</code>，重写线程主函数<code>Routine()</code>（这是一个虚函数），使用时<code>MyTask task; task.Run();</code>。在多数系统中，线程的创建和启动是一个连续的动作。线程属于系统级资源，可以在“资源管理器”中查看每个进程的线程数。创建线程是操作系统进行的，不能直接调用<code>Routine</code>函数。调用<code>Run</code>函数时，相当于对<code>OS</code>说“请创建一个线程，入口函数为<code>Routine()</code>”，OS则根据程序员的要求，创建一个线程实体来运行，线程的主函数就是<code>Routine()</code>。主要代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span>* <span class="title">OS_Thread_Proc_Linux</span><span class="params">(<span class="keyword">void</span>* param)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    OS_Thread* thrd = (OS_Thread*) param;</span><br><span class="line">    thrd-&gt;Routine();  <span class="comment">//Routine函数声明virtual int Routine() = 0;</span></span><br><span class="line">    pthread_exit(<span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> OS_Thread::Run()</span><br><span class="line">&#123;</span><br><span class="line">    OS_Thread_Priv* priv = <span class="keyword">new</span> OS_Thread_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    m_Priv = priv;</span><br><span class="line">    <span class="keyword">if</span>(pthread_create(&amp;priv-&gt;hThread, <span class="literal">NULL</span>, OS_Thread_Proc_Linux, <span class="keyword">this</span>) &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">delete</span> priv;</span><br><span class="line">        m_Priv = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>调用<code>Run</code>函数后，主要通过调用<code>pthread_create</code>函数创建线程，实际上线程主函数是<code>OS_Thread_Proc_Linux</code>，然后在这个函数中由调用了程序员重载的纯虚函数<code>Routine</code>。</p>
-<h6 id="两种语境"><a href="#两种语境" class="headerlink" title="两种语境"></a>两种语境</h6><ol>
-<li><code>OS_Thread:</code>它是一个<code>C++</code>类/对象，封装了线程相关数据和操作。</li>
-<li>线程实体：由操作系统创建的实体，通常说的线程指的是线程实体，是一个运行时的概念。<h6 id="线程是有限的资源"><a href="#线程是有限的资源" class="headerlink" title="线程是有限的资源"></a>线程是有限的资源</h6>线程是系统级资源，线程的切换和调度也是有成本的，所以一个进程中的最大线程数是有限制的，一般为几千到几万。在工程实践中，一般线程数最多为几十个。</li>
-</ol>
-<h4 id="线程的停止和回收"><a href="#线程的停止和回收" class="headerlink" title="线程的停止和回收"></a>线程的停止和回收</h4><h6 id="正常情况"><a href="#正常情况" class="headerlink" title="正常情况"></a>正常情况</h6><p>在<code>osapi</code>中，当<code>return</code>语句被执行时，表示该线程正常退出。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"do something \n"</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//线程主函数退出</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p><code>return</code>语句被执行、<code>Routine()</code>函数返回，线程退出。</p>
-<h6 id="异常情况"><a href="#异常情况" class="headerlink" title="异常情况"></a>异常情况</h6><p>当主线程（主程序）退出的时候，所有的线程都会被立即终止，即使有线程正在运行。这种终止时不正常的，有可能会造成数据的不完整。<br>例如主函数中添加了<code>getchar</code>函数，当没有<code>getchar</code>函数时，主线程会一直执行，执行完毕后立即退出，所以其他线程也可能会异常终止。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Buddhist task1;</span><br><span class="line">    task1.Run(); <span class="comment">//线程1</span></span><br><span class="line">    Confucian task2;</span><br><span class="line">    task2.Run(); <span class="comment">//线程2</span></span><br><span class="line">    getchar(); <span class="comment">//输入回车主线程终止</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h6 id="线程的回收"><a href="#线程的回收" class="headerlink" title="线程的回收"></a>线程的回收</h6><p>使用<code>OS_Thread::Join(&amp;task);</code>等待线程的退出，函数实现如下，实际上是对pthread_join函数进行了封装。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> OS_Thread::Join(OS_Thread* thrd)</span><br><span class="line">&#123;</span><br><span class="line">    OS_Thread_Priv* priv = (OS_Thread_Priv*) thrd-&gt;m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(priv)</span><br><span class="line">    &#123;   </span><br><span class="line">        pthread_join(priv-&gt;hThread, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">delete</span> priv;</span><br><span class="line">        thrd-&gt;m_Priv = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p><code>Join</code>函数的作用：</p>
-<ol>
-<li>等待目标线程的退出，如果目标线程尚未退出，则会一直等待，直到其退出为止。</li>
-<li>回收这个线程的相关系统资源（线程的个数是受限的）。</li>
-</ol>
-<p><code>Join</code>的调用：当一个线程A要退出时，由另一个线程调用来回收线程A。需要注意的是：<code>Join</code>不能回收自己。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Join(<span class="keyword">this</span>); <span class="comment">//出错的，不能自己join自己</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>可以由主线程或者任何一个其他线程执行<code>Join</code>。<code>Join</code>的位置：不能只看字面上的位置，而是要从运行的角度来看待问题，例如如下代码：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Buddhist</span>:</span> <span class="keyword">public</span> OS_Thread</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_quitfalg = <span class="literal">false</span>;</span><br><span class="line">        Run();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">stop</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        m_quitfalg = <span class="literal">true</span>;</span><br><span class="line">        Join(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="keyword">bool</span> m_quitfalg;</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span> &amp;&amp; !m_quitfalg; i++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"ma mi ma mi hong..."</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            OS_Thread::Sleep(<span class="number">1</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">cout</span> &lt;&lt; <span class="string">"善后工作"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
-<p>在上面的代码中，<code>Join</code>函数位于创建线程类的<code>stop</code>函数中，并且将<code>this</code>作为参数，但实际上这种写法是正确的，因为<code>stop</code>函数是在主函数即主线程中调用，虽然代码中使用<code>Join(this)</code>，但实际上并不是自己等待自己。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjhm105l9000gqgqw1onpzcjj" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjhqj7ddr000kivqwheyzmnqk" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -731,7 +718,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/effective-c/">effective c++</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/false-sharing/">false sharing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/effective-c/">effective c++</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/effective-c-（3）/">effective c++（3）</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/false-sharing/">false sharing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
     </div>
   </div>
 
@@ -741,7 +728,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 15px;">effective c++</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 20px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 15px;">effective c++</a> <a href="/tags/effective-c-（3）/" style="font-size: 10px;">effective c++（3）</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 20px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
     </div>
   </div>
 
@@ -763,6 +750,10 @@
       <ul>
         
           <li>
+            <a href="/2018/05/29/effective-c-（3）/">effective c++（3）</a>
+          </li>
+        
+          <li>
             <a href="/2018/05/25/false-sharing相关/">false sharing相关</a>
           </li>
         
@@ -776,10 +767,6 @@
         
           <li>
             <a href="/2018/05/08/effective-c-（1）/">effective c++（1）</a>
-          </li>
-        
-          <li>
-            <a href="/2018/05/01/网络（3）/">网络（3）</a>
           </li>
         
       </ul>

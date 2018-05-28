@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>effective c++（3） | 小白拜拜拜</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="16. 在资源管理类中小心copying行为当使用C API函数处理类型为Mutex的互斥器对象，共有lock和unlock两个函数可用：12void lock(Mutex* pm);  //锁定pm所指的互斥器void unlock(Mutex* pm);  //将互斥器解除锁定 为确保不会忘记将锁住的Mutex解锁，可能需要由RAII守则支配的类来实现，即资源在构造期间获得，在析构期间释放：1">
+<meta name="keywords" content="effective c++（3）">
+<meta property="og:type" content="article">
+<meta property="og:title" content="effective c++（3）">
+<meta property="og:url" content="http://yoursite.com/2018/05/29/effective-c-（3）/index.html">
+<meta property="og:site_name" content="小白拜拜拜">
+<meta property="og:description" content="16. 在资源管理类中小心copying行为当使用C API函数处理类型为Mutex的互斥器对象，共有lock和unlock两个函数可用：12void lock(Mutex* pm);  //锁定pm所指的互斥器void unlock(Mutex* pm);  //将互斥器解除锁定 为确保不会忘记将锁住的Mutex解锁，可能需要由RAII守则支配的类来实现，即资源在构造期间获得，在析构期间释放：1">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-05-28T17:33:05.600Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="effective c++（3）">
+<meta name="twitter:description" content="16. 在资源管理类中小心copying行为当使用C API函数处理类型为Mutex的互斥器对象，共有lock和unlock两个函数可用：12void lock(Mutex* pm);  //锁定pm所指的互斥器void unlock(Mutex* pm);  //将互斥器解除锁定 为确保不会忘记将锁住的Mutex解锁，可能需要由RAII守则支配的类来实现，即资源在构造期间获得，在析构期间释放：1">
+  
+    <link rel="alternate" href="/atom.xml" title="小白拜拜拜" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">小白拜拜拜</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-effective-c-（3）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/29/effective-c-（3）/" class="article-date">
+  <time datetime="2018-05-28T17:32:12.000Z" itemprop="datePublished">2018-05-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      effective c++（3）
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="16-在资源管理类中小心copying行为"><a href="#16-在资源管理类中小心copying行为" class="headerlink" title="16. 在资源管理类中小心copying行为"></a>16. 在资源管理类中小心copying行为</h4><p>当使用<code>C API</code>函数处理类型为<code>Mutex</code>的互斥器对象，共有<code>lock</code>和<code>unlock</code>两个函数可用：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">lock</span><span class="params">(Mutex* pm)</span></span>;  <span class="comment">//锁定pm所指的互斥器</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">unlock</span><span class="params">(Mutex* pm)</span></span>;  <span class="comment">//将互斥器解除锁定</span></span><br></pre></td></tr></table></figure></p>
+<p>为确保不会忘记将锁住的<code>Mutex</code>解锁，可能需要由<code>RAII</code>守则支配的类来实现，即资源在构造期间获得，在析构期间释放：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Lock</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    Lock(Mutex* pm)</span><br><span class="line">    :MutexPtr(pm)</span><br><span class="line">    &#123;</span><br><span class="line">        lock(MutexPtr);</span><br><span class="line">    &#125;</span><br><span class="line">    ~Lock()</span><br><span class="line">    &#123;</span><br><span class="line">        unlock(MutexPtr);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    Mutex *MutexPtr;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>但是当资源被复制时会出现问题，有两种解决方法：</p>
+<ol>
+<li><p>禁止复制，可以将<code>copying</code>操作声明为<code>private</code>。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Lock</span>:</span> <span class="keyword">private</span> Uncopyable&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>引用计数法，有时希望保持资源直到最后一个引用被销毁。<code>share_ptr</code>可以实现，它允许删除器作为第二个参数。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Lock</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function">explict <span class="title">Lock</span><span class="params">(Mutex* pm)</span></span></span><br><span class="line">    : MutexPtr(pm, unlock)</span><br><span class="line">    &#123;</span><br><span class="line">        lock(MutexPtr.get())</span><br><span class="line">    &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    <span class="built_in">std</span>::tr1::share_ptr&lt;Mutex&gt; MutexPtr;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>此时不需要再声明为析构函数。</p>
+<ol>
+<li>复制底部资源，深度复制。</li>
+<li>转移底部资源的所有权，使用<code>auto_ptr</code>。将所有权由被复制物转移到目标物。</li>
+</ol>
+<h4 id="17-在资源管理类中提供对原始资源的访问"><a href="#17-在资源管理类中提供对原始资源的访问" class="headerlink" title="17. 在资源管理类中提供对原始资源的访问"></a>17. 在资源管理类中提供对原始资源的访问</h4><p>例如使用智能指针时，需要保存工厂函数如<code>createInvestment</code>的调用结果<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::tr1::share_ptr&lt;Investment&gt; pInv(createInvestment());</span><br></pre></td></tr></table></figure></p>
+<p>当希望以某个函数处理<code>Investment</code>对象，例如:<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">daysHeld</span><span class="params">(<span class="keyword">const</span> Investment* pi)</span></span>;</span><br><span class="line"><span class="keyword">int</span> days = daysHeld(pInv); <span class="comment">//如此调用会报错</span></span><br></pre></td></tr></table></figure></p>
+<p>有两个方法可以达成目标，智能指针内部提供<code>get</code>函数，用来执行显式转换，也就是会返回智能指针内部的原始指针：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> days = daysHeld(pInv.get());</span><br></pre></td></tr></table></figure></p>
+<p>同时智能指针也重载了取地址操作符，允许隐式的转换成底部原始指针。<br>例如与字体相关的类<code>Font</code>，它处理的是<code>FontHandler</code>，可以用两种方式进行转换。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">FontHandler <span class="title">getFont</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">releaseFont</span><span class="params">(FontHandler fh)</span></span>;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Font</span>&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function">explict <span class="title">Font</span><span class="params">(FontHandler fh)</span></span></span><br><span class="line">    : f(fh) &#123;&#125;</span><br><span class="line">    ~Font()&#123;releaseFont(f);&#125;</span><br><span class="line">    <span class="function">FontHandler <span class="title">get</span><span class="params">()</span> <span class="keyword">const</span></span>&#123;<span class="keyword">return</span> f;&#125; <span class="comment">//显式转换</span></span><br><span class="line">    <span class="function">FontHandler <span class="title">operator</span><span class="params">()</span> <span class="keyword">const</span></span>&#123;<span class="keyword">return</span> f;&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    FontHandler f;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>隐式转换使得客户调用轻松自然。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ChangeFontSize</span><span class="params">(FontHandler f, <span class="keyword">int</span> newSize)</span></span>;</span><br><span class="line">Font f(getFont());</span><br><span class="line"><span class="keyword">int</span> newFontSize;</span><br><span class="line"></span><br><span class="line">ChangeFontSize(f.get(), newFontSize); <span class="comment">//显式</span></span><br><span class="line"></span><br><span class="line">changeFontSize(f, newFontSize); <span class="comment">//函数重载隐式调用</span></span><br><span class="line"></span><br><span class="line">Font f1(getFont());</span><br><span class="line">FontHandler f2 = f1;  <span class="comment">//愿意是拷贝Font对象，但是将f1隐式转换为FontHandler然后才复制</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="18-成对使用new和delete时要采取相同形式"><a href="#18-成对使用new和delete时要采取相同形式" class="headerlink" title="18. 成对使用new和delete时要采取相同形式"></a>18. 成对使用new和delete时要采取相同形式</h4><p>如果在表达式中使用[]，必须在相应的<code>delete</code>表达式中，也使用[]，如果在<code>new</code>表达式中不适用[],也不应该在相应的<code>delete</code>中使用[],否则结果未有定义。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">string</span> *stringPtr1 = <span class="keyword">new</span> <span class="built_in">string</span>;</span><br><span class="line"><span class="built_in">string</span> *stringPtr2 = <span class="keyword">new</span> <span class="built_in">string</span>[<span class="number">100</span>];</span><br><span class="line"><span class="keyword">delete</span> stringPtr1 <span class="comment">//删除一个对象;</span></span><br><span class="line"><span class="keyword">delete</span> []stringPtr2 <span class="comment">//删除一个对象组成的数组;</span></span><br></pre></td></tr></table></figure></p>
+<p>当时用<code>typedef</code>的时候情况更复杂，例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">typedef string AddressLines[4];</span><br><span class="line">string *pal = new AddressLines; //实际上此时是对象数组。</span><br><span class="line">delete pal;  //行为未有定义</span><br><span class="line">delete []pal;</span><br></pre></td></tr></table></figure></p>
+<h4 id="19-以独立语句将newd对象置入智能指针"><a href="#19-以独立语句将newd对象置入智能指针" class="headerlink" title="19. 以独立语句将newd对象置入智能指针"></a>19. 以独立语句将newd对象置入智能指针</h4><p>例如一个函数揭示处理程序的优先权，另一个函数用来在某动态分配所得的<code>Widget</code>上进行某些带有优先权的处理。<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">priority</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">processWidget</span><span class="params">(share_ptr&lt;Widget&gt; pw, <span class="keyword">int</span> priority)</span></span>;</span><br><span class="line">processWidget(share_ptr&lt;Widget&gt;(<span class="keyword">new</span> Widget), priority()); <span class="comment">//可以通过编译</span></span><br></pre></td></tr></table></figure></p>
+<p>上述可能会出现资源泄露，在调用<code>processWidget</code>之前需要做三件事：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1调用priority</span><br><span class="line">2执行“new Widget”</span><br><span class="line">3调用shared_ptr构造函数</span><br></pre></td></tr></table></figure></p>
+<p><code>java</code>和<code>c#</code>会以特定次序完成参数核算，但c++不同，所以如果以213顺序执行并且1出错会引起资源泄露，解决方法就是以独立语句将<code>newd</code>对象置入智能指针。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/29/effective-c-（3）/" data-id="cjhqj7ddh000eivqw74jr94ca" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c-（3）/">effective c++（3）</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2018/05/25/false-sharing相关/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Älter</strong>
+      <div class="article-nav-title">false sharing相关</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/effective-c/">effective c++</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/effective-c-（3）/">effective c++（3）</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/false-sharing/">false sharing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 20px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 15px;">effective c++</a> <a href="/tags/effective-c-（3）/" style="font-size: 10px;">effective c++（3）</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 20px;">复习</a> <a href="/tags/线程/" style="font-size: 20px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archiv</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">letzter Beitrag</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/05/29/effective-c-（3）/">effective c++（3）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/25/false-sharing相关/">false sharing相关</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/14/面试复习（3）/">面试复习（3）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/11/effective-c-（2）/">effective-c++（2）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/08/effective-c-（1）/">effective c++（1）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+  </script>
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 小白拜拜拜<br>
+  	  <span id="busuanzi_container_site_pv">
+         本站总访问量<span id="busuanzi_value_site_pv"></span>次
+      </span> 
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
