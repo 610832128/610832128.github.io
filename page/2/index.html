@@ -62,6 +62,54 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-线程（3）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/04/27/线程（3）/" class="article-date">
+  <time datetime="2018-04-27T09:04:21.000Z" itemprop="datePublished">2018-04-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/04/27/线程（3）/">线程（3）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="线程间的通信机制-信号量"><a href="#线程间的通信机制-信号量" class="headerlink" title="线程间的通信机制-信号量"></a>线程间的通信机制-信号量</h4><h5 id="引例（生产者消费者问题）"><a href="#引例（生产者消费者问题）" class="headerlink" title="引例（生产者消费者问题）"></a>引例（生产者消费者问题）</h5><p><code>Producer</code>: 生产者，每个几秒生成一个物品，并放入缓冲区中。<br><code>Consumer</code>: 消费者，一旦发现缓冲区里有物品即可取走。<br>一个读一个写。<br>如何能保证即时取走？</p>
+<h6 id="轮询机制"><a href="#轮询机制" class="headerlink" title="轮询机制"></a>轮询机制</h6><p><code>Consumer</code>线程不知道何时有物品可以取，只是不停地去查询（比如每隔<code>50ms</code>查询一次，以便及时取走）轮询的间隔不能太大，否则缓冲区可能已经堆积如山了。主要代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">queue</span>&lt;<span class="keyword">int</span>&gt; q;</span><br><span class="line">OS_Mutex g_mutex;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Producer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">int</span> r = rand() % <span class="number">20</span> + <span class="number">1</span>;</span><br><span class="line">            q.push(r);</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"放入物品："</span> &lt;&lt; r &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">            Msleep(r * <span class="number">50</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Consumer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">while</span>(!q.empty())</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">int</span> tmp = q.front();</span><br><span class="line">                q.pop();</span><br><span class="line">                <span class="built_in">cout</span> &lt;&lt; <span class="string">"取出物品："</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">            Msleep(<span class="number">500</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上段代码中，生产者和消费者之间是没有联系的，不能保证真正及时的取出来，查询不能太频繁（浪费<code>CPU</code>），不频繁的时候（缓存区满），难以把握，需要设计一个合理的轮询间隔。最好有一个通知机制：生产者把物品放进去之后，通知消费者，消费者接到通知后，再去取物品。这就出现了信号量机制。</p>
+<h6 id="信号量机制"><a href="#信号量机制" class="headerlink" title="信号量机制"></a>信号量机制</h6><p>信号量：<code>Semaphore</code>,用于实现线程间的通知机制（和<code>Mutex</code>一样，是一个系统级对象）。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">OS_Semaphore g_sem;</span><br><span class="line">第一个线程: Producer</span><br><span class="line">    g_sem.Post(); //通知</span><br><span class="line">第二个线程: Consumer</span><br><span class="line">    g_sem.Wait(); //等待通知</span><br></pre></td></tr></table></figure></p>
+<p><code>osapi</code>库的源代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> OS_Semaphore::Init(<span class="keyword">int</span> initial_value)</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = <span class="keyword">new</span> OS_Semaphore_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    m_Priv = priv;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sem_init(&amp;priv-&gt;hSem, <span class="number">1</span>, initial_value) &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">delete</span> priv;</span><br><span class="line">        m_Priv = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> OS_Semaphore::wait()</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">if</span>(sem_wait(&amp;priv-&gt;hsem) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> OS_Semaphore::Post()</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span>;</span><br><span class="line">    sem_post(&amp;priv-&gt;hSem);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>信号量的值： <code>0, 1, 2, ..., N, ...</code><br>生产者可以一次放入多个物品，并将信号量的值增加。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">g_sem.Post();//信号量的值加1</span><br><span class="line">g_sem.Wait();//信号量的值减1。如果信号量的值为0，则线程进入等待状态（阻塞），此时不占用cpu。</span><br></pre></td></tr></table></figure></p>
+<p>使用信号量机制的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">queue</span>&lt;<span class="keyword">int</span>&gt; q;</span><br><span class="line">OS_Mutex g_mutex;</span><br><span class="line"><span class="function">OS_Semaphore <span class="title">g_sem</span><span class="params">(<span class="number">0</span>)</span></span>; <span class="comment">//将初始信号量设置为0</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Producer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">int</span> r = rand() % <span class="number">20</span> + <span class="number">1</span>;</span><br><span class="line">            q.push(r);</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"放入物品："</span> &lt;&lt; r &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">            g_sem.Post();</span><br><span class="line">            Msleep(r * <span class="number">50</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Consumer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">            g_sem.Wait();</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">while</span>(!q.empty())</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">int</span> tmp = q.front();</span><br><span class="line">                q.pop();</span><br><span class="line">                <span class="built_in">cout</span> &lt;&lt; <span class="string">"取出物品："</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以根据实际情况，将信号量的值初始化为<code>0</code>或其他正数，一般情况信号量的初始值由你的实现应用中对应的那个量决定，比如，缓冲区中的物品数量：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">OS_Semaphore g_sem(0);</span><br><span class="line">OS_Semaphore g_sem(10); //已经有了10个量</span><br></pre></td></tr></table></figure></p>
+<h6 id="超时等待机制"><a href="#超时等待机制" class="headerlink" title="超时等待机制"></a>超时等待机制</h6><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> ret = g_sem.Wait(<span class="number">1000</span>); <span class="comment">//ms</span></span><br><span class="line"><span class="keyword">if</span>(ret != <span class="number">0</span>) <span class="comment">//如果返回值不为0，表明已经超时</span></span><br><span class="line">&#123;<span class="comment">//超时处理&#125;</span></span><br></pre></td></tr></table></figure>
+<p><code>osapi</code>中超时处理的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> OS_Semaphore::Wait(<span class="keyword">int</span> ms)</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    timeval tv_now;</span><br><span class="line">    gettimeofday(&amp;tv_now, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    timespec ts;</span><br><span class="line">    ts.tv_sec = tv_now.tv_sec;</span><br><span class="line">    ts.tv_nsec = tv_now.tv_usec * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> ns = ts.tv_nsec + (ms % <span class="number">1000</span>)  * <span class="number">1000000</span>;</span><br><span class="line">    ts.tv_nsec = ns % <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ns / <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ms / <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sem_timedwait(&amp;priv-&gt;hSem, &amp;ts) != <span class="number">0</span>)</span><br><span class="line">    &#123;   </span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjjdxz4ve000orpqwog2f7dvx" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-线程（2）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/04/27/线程（2）/" class="article-date">
@@ -122,7 +170,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjhsf7con000mduqw1cwf69pd" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/线程（2）/" data-id="cjjdxz4vb000mrpqwv96pido1" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -199,7 +247,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjhsf7col000kduqwcvlqf59t" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/26/线程（1）/" data-id="cjjdxz4v7000krpqwn44sgcg9" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
@@ -271,7 +319,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjhsf7cmk0000duqwk4ur302d" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/Building-C-Projects/" data-id="cjjdxz4t20000rpqwr1kjw1qp" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -319,7 +367,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjhsf7cp8000yduqwxll8yzfd" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/25/面试复习（2）/" data-id="cjjdxz4vw0010rpqw7wiy7ntt" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -382,7 +430,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjhsf7cnx0006duqwwcm04vsd" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/22/LLVM学习（3）/" data-id="cjjdxz4uf0006rpqwvn9kpwg2" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -431,7 +479,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjhsf7cnv0005duqw07e4on4u" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/20/LLVM学习（2）/" data-id="cjjdxz4uc0005rpqwifpvydav" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
@@ -513,7 +561,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjhsf7cp6000wduqwfrtameq0" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/18/面试复习/" data-id="cjjdxz4vt000yrpqwe0v5we2e" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -634,7 +682,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjhsf7cmu0001duqwhptnvkz9" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/04/HSI-buffer-overflow/" data-id="cjjdxz4ti0001rpqwl8gslqjy" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/HSI/">HSI</a></li></ul>
@@ -716,54 +764,11 @@ rm -rf /swapfile
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjhsf7cnk0004duqwzh4hvp7i" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/03/30/LLVM学习（1）/" data-id="cjjdxz4u90004rpqw7iyaifnw" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLVM/">LLVM</a></li></ul>
 
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-P、NP、NP-hard、NPC问题" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/03/13/P、NP、NP-hard、NPC问题/" class="article-date">
-  <time datetime="2018-03-12T16:27:24.000Z" itemprop="datePublished">2018-03-13</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/03/13/P、NP、NP-hard、NPC问题/">P、NP、NP-hard、NPC问题</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="P问题："><a href="#P问题：" class="headerlink" title="P问题："></a>P问题：</h4><p>一个问题可以在多项式的时间得到解决。P为英文<code>polynominal</code>的首字母。多项式时间的时间复杂度例如<code>O(n)</code>、<code>O(n^2)</code>等等。</p>
-<h4 id="NP问题："><a href="#NP问题：" class="headerlink" title="NP问题："></a>NP问题：</h4><p>NP问题可能没有一个已知的快速解决方案。但如果能够在多项式的时间内验证一个解是否正确，则称此问题为NP问题。例如根据数据画好了一个图。求解能否找到权重和小于100的生成树。这个问题可以在多项式的时间内得到验证。假设你运气好，随手一画就得到了小于100的生成树，验证的方法只需要将生成树的所有树边权重相加。时间复杂度为<code>O(V)</code>。V代表树的结点树，生成树的边数为<code>|V|-1</code>。</p>
-<h4 id="NPC问题"><a href="#NPC问题" class="headerlink" title="NPC问题"></a>NPC问题</h4><p>提到NPC问题之前需要了解的概念是规约。例如一个问题A可以约化为问题B的含义是，可以用问题B的解法来解决问题A。或者说A可以转化为B。例如求一元一次方程可以规约到求一元二次方程。将一元二次方程的二次项系数变为0。这样两个问题就等价了。通过实例也可看出问题B不比问题A简单，即问题B的时间复杂度高于或者等于A。规约是具有传递性的。A规约成B，B规约成C，则A能够规约成C。</p>
-<p>通过不断地规约，我们能得到复杂度更高但是应用范围更广的算法来代替复杂度虽低但是应用范围小的一类问题的算法。根据传递性，最终可以得到一个复杂度最高，并且可以解决所有NP问题的NP问题。这就是NPC问题，即NP完全问题。NPC不止一个，而是一系列问题。</p>
-<h4 id="证明一个问题是NPC问题的步骤："><a href="#证明一个问题是NPC问题的步骤：" class="headerlink" title="证明一个问题是NPC问题的步骤："></a>证明一个问题是NPC问题的步骤：</h4><p>1.首先要证明此问题是一个NP问题。2.证明一个已知的NPC问题能够规约到此问题。已知的NPC问题，给定一个逻辑电路，是否存在一种输入使得输出为<code>True</code>。所有的NP问题都可以规约到逻辑电路问题。直观地解释是计算机中所有的程序最终都转化成01组成的机器语言执行。</p>
-<p>另外一个比较神奇的问题是，因为NPC问题是NP问题不断规约而来的，所以如果能证明一个NPC问题可以在多项式时间内解决。那么所有的NP问题都能在多项式时间内解决。即<code>NP=P</code>。遗憾的是此题目前无解。</p>
-<h4 id="NP-hard问题："><a href="#NP-hard问题：" class="headerlink" title="NP-hard问题："></a>NP-hard问题：</h4><p>NP-hard问题满足NPC问题定义中的第二条。但是不一定满足第一条。即NP-hard的范围比NPC范围更广。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/03/13/P、NP、NP-hard、NPC问题/" data-id="cjhsf7cnz0009duqwzzyxint4" class="article-share-link">Teilen</a>
-      
-      
     </footer>
   </div>
   
@@ -799,7 +804,7 @@ rm -rf /swapfile
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 15px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 20px;">effective c++</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/网络/" style="font-size: 15px;">网络</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 15px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 20px;">effective c++</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
     </div>
   </div>
 
@@ -808,7 +813,7 @@ rm -rf /swapfile
   <div class="widget-wrap">
     <h3 class="widget-title">Archiv</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
     </div>
   </div>
 
@@ -819,6 +824,10 @@ rm -rf /swapfile
     <h3 class="widget-title">letzter Beitrag</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2018/07/09/网络（4）/">网络（4）.md</a>
+          </li>
         
           <li>
             <a href="/2018/05/30/effective-c-（4）/">effective c++（4）</a>
@@ -834,10 +843,6 @@ rm -rf /swapfile
         
           <li>
             <a href="/2018/05/14/面试复习（3）/">面试复习（3）</a>
-          </li>
-        
-          <li>
-            <a href="/2018/05/11/effective-c-（2）/">effective c++（2）</a>
           </li>
         
       </ul>

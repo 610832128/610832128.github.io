@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>网络（4）.md | 小白拜拜拜</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="1. 值结果参数进程-&amp;gt;内核：共有三个函数bind、connect和sendto。参数是指向某个套接字地址结构的指针和该结构的整数大小：12struct sockaddr_in serv;connect(sockfd, (SA*)&amp;amp;serv, sizeof(serv)); 内核-&amp;gt;进程：共有四个函数accept、recvfrom、getsockname和getpeername。">
+<meta name="keywords" content="网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网络（4）.md">
+<meta property="og:url" content="http://yoursite.com/2018/07/09/网络（4）/index.html">
+<meta property="og:site_name" content="小白拜拜拜">
+<meta property="og:description" content="1. 值结果参数进程-&amp;gt;内核：共有三个函数bind、connect和sendto。参数是指向某个套接字地址结构的指针和该结构的整数大小：12struct sockaddr_in serv;connect(sockfd, (SA*)&amp;amp;serv, sizeof(serv)); 内核-&amp;gt;进程：共有四个函数accept、recvfrom、getsockname和getpeername。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-07-09T07:17:27.838Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="网络（4）.md">
+<meta name="twitter:description" content="1. 值结果参数进程-&amp;gt;内核：共有三个函数bind、connect和sendto。参数是指向某个套接字地址结构的指针和该结构的整数大小：12struct sockaddr_in serv;connect(sockfd, (SA*)&amp;amp;serv, sizeof(serv)); 内核-&amp;gt;进程：共有四个函数accept、recvfrom、getsockname和getpeername。">
+  
+    <link rel="alternate" href="/atom.xml" title="小白拜拜拜" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">小白拜拜拜</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Suche"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-网络（4）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/07/09/网络（4）/" class="article-date">
+  <time datetime="2018-07-09T07:14:47.000Z" itemprop="datePublished">2018-07-09</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      网络（4）.md
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="1-值结果参数"><a href="#1-值结果参数" class="headerlink" title="1. 值结果参数"></a>1. 值结果参数</h4><p>进程-&gt;内核：共有三个函数bind、connect和sendto。参数是指向某个套接字地址结构的指针和该结构的整数大小：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">struct sockaddr_in serv;</span><br><span class="line">connect(sockfd, (SA*)&amp;serv, sizeof(serv));</span><br></pre></td></tr></table></figure></p>
+<p>内核-&gt;进程：共有四个函数accept、recvfrom、getsockname和getpeername。其中两个参数是指向某个套接字地质结构的指针和指向该结构大小的整数变量的指针。</p>
+<h4 id="2-字节排序函数"><a href="#2-字节排序函数" class="headerlink" title="2. 字节排序函数"></a>2. 字节排序函数</h4><p>例如存储16位两个字节，有两种方法，一种是将低序字节存储在起始地址，称为小端字节序，另一种将高序字节存储在起始地址，称为大端字节序。两种格式都有系统使用。把某个给定系统所用的字节序称为主机字节序。<br>x86使用小端，但是网际协议使用大端字节序来传送这些多字节整数。</p>
+<h4 id="3-inet-aton、inet-addr和inet-ntoa函数"><a href="#3-inet-aton、inet-addr和inet-ntoa函数" class="headerlink" title="3. inet_aton、inet_addr和inet_ntoa函数"></a>3. inet_aton、inet_addr和inet_ntoa函数</h4><p>inet_aton inet_addr和inet_ntoa在点分十进制数串与长度为32位的网络字节序二进制值间转换IPv4地址。相对较新的函数inet_pton和inet_ntop对于IPv4和IPv6地址都适用。</p>
+<p>inet_aton将strptr所指C字符串转换成一个32位网络字节序的二进制值，并通过指针addrptr来存储。若成功则返回1，否则返回0.<code>int inet_aton(const char* strptr, struct in_addr *addrptr)</code></p>
+<p>inet_addr进行相同的转换，但是所有的二进制值都是有效的IP地址，但是出错时函数返回全1.现已经废除。<code>in_add_t inet_addr(const char *strptr)</code><br></p>
+<p>inet_ntoa将32位的网络字节序二进制IPv4地址转换为相应的点分十进制数串。<code>char *inet_ntoa(struct in_addr inaddr)</code>。返回值所指向的字符串驻留在静态内存中。函数以一个结构而不是一个指针作为参数。<br></p>
+<p>inet_pton和inet_ntop是随着IPv6出现的新函数，对于IPv4和IPv6</p>
+<h4 id="4-MSL、TTL和RTT"><a href="#4-MSL、TTL和RTT" class="headerlink" title="4. MSL、TTL和RTT"></a>4. MSL、TTL和RTT</h4><p>MSL(maximum segment lifetime) 最大报文生存时间，每个TCP实现必须选择一个MSL, 它是任何报文段被丢弃前在网络内的最长时间，这个时间是有限的，因为TCP报文段以IP数据包在网络中传输，而IP有限制其生存时间的TTL时间。常用30秒，1分钟或两分钟。</p>
+<p>TTL（time to live）生存时间字段，不是具体时间，设置了数据报可以经过的最多路由器数，初始值由源主机设置。一旦经过一个处理的路由器就减去1.为0时就丢弃并发送ICMP报文通知源主机。</p>
+<p>RTT（round trp time）往返时间，TCP超时与重传中最总要的部分时对一个给定连接的往返时间RTT的测量。由于路由器和网络流量均会发生变化，因此这个时间会经常变化。</p>
+<p>TIME_WAIT状态：设置时间为2MSL, 可以假设具有最大跳限（255）的8位字段（TTL）分组在网络中存在时间不可能超过MSL秒。TIME_WATI状态存在的理由是</p>
+<ol>
+<li><p>可靠的实现TCP全双工的连接和终止。执行主动关闭的是处于TIME_WAIT状态的那一端。假设主动关闭的是客户端，第三次握手服务器端发送FIN,客户端发送ACK，假设ACK丢失，服务器会重传FIN，客户端发送ACK和服务器端重传FIN的最大时间是2MSL。客户端不重传ACK的原因是防止洪泛攻击。</p>
+</li>
+<li><p>允许老的重复分节在网络中消失。如果一个连接的IP地址和端口号都相等。需要防止老的重复分组在终止后重现，2MSL，足以让某个方向的分组最多存活MSL秒即被丢弃，另一个方向上的应答最多存活MSL秒即被丢弃。保证每次成功建立一个新的TCP连接时，老的重复分组在网络中消失。</p>
+</li>
+</ol>
+<h4 id="5-listen函数"><a href="#5-listen函数" class="headerlink" title="5. listen函数"></a>5. listen函数</h4><p>socket函数创建一个套接字时，被假设为一个主动套接字，是一个调用connect发起的客户套接字。listen函数可以把一个未连接的套接字转化成一个被动套接字。调用后导致套接字从CLOSED状态转换到LISTEN状态。<code>int listen(int sockfd, int backlog)</code>。其中第二个参数规定了内核应该未相应套接字排队的最大连接个数。通常用在socket和bind函数之后，在accept函数之前。内核为任何监听套接字维护两个队列，分别为未完成连接队列和已完成连接队列。未完成连接队列中每个SYN分节对应其中一项，已由某个客户发出并到达，服务器等待完成三次握手过程。已完成队列是指已经完成TCP三路握手过程的客户对应其中一项。这些套接字处于ESTABLISHED状态。backlog可以理解为超过两个队列的和的值。</p>
+<h4 id="6-accept函数"><a href="#6-accept函数" class="headerlink" title="6. accept函数"></a>6. accept函数</h4><p>accept函数由TCP服务器调用，用于从已经完成连接队列队头返回下一个已完成连接。如果连接队列为空则进程被投入睡眠。<code>int accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen)</code>。一个服务器通常仅创建一个监听套接字，它在服务器的声明期内一直存在。内核为每个由服务器进程接受的客户连接创建一个已连接套接字。当服务器完成对某个给定客户的服务时，相应的已连接套接字就关闭。如果对返回客户协议地址不感兴趣，可以把cliaddr和addrlen均置空。</p>
+<h4 id="7-fork函数和exec函数"><a href="#7-fork函数和exec函数" class="headerlink" title="7. fork函数和exec函数"></a>7. fork函数和exec函数</h4><p>fork函数时unix中派生新进程的唯一方法。<code>pid_t fork(void)</code>，fork函数调用一次却返回两次。他在调用进程（父进程）中返回一次，返回值时子进程的ID号，在子进程中又返回一次，返回值时0。因此返回值本身会告知当前进程是子进程还是父进程。如此设置的原因是父进程可能有很多子进程，但是子进程只有一个父进程很容易得到父进程的ID号。存放在硬盘上的可执行程序文件能够被Unix执行的唯一方法是：由一个现有进程调用六个exec函数中的某一个。</p>
+<h4 id="8-并发服务器"><a href="#8-并发服务器" class="headerlink" title="8. 并发服务器"></a>8. 并发服务器</h4><p>并发服务器的基本轮廓:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">pid_t pid;</span><br><span class="line">int listenfd, connfd;</span><br><span class="line">listenfd = Socket(AF_INET, SOCK_STREAM, 0);</span><br><span class="line">Bind(listenfd, (SA*)sockaddr, sizeof(sockaddr));</span><br><span class="line">Listen(listenfd, LISTENQ);</span><br><span class="line">for(;;)</span><br><span class="line">&#123;</span><br><span class="line">  connfd = Accept(listenfd, (SA*)NULL, NULL);</span><br><span class="line">  if((pid = Fork()) == 0)</span><br><span class="line">  &#123;</span><br><span class="line">    Close(listenfd);</span><br><span class="line">    doit(connfd);</span><br><span class="line">    Close(connfd);</span><br><span class="line">    exit(0)</span><br><span class="line">  &#125;</span><br><span class="line">  Close(connfd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>父进程调用了Close(connfd)却没有终止进程的原因是每个文件或套接字都有一个引用计数。类似于shared_ptr智能指针。引用增加时计数值加1，当进程关闭时计数值减1，当计值为0时套接字真正的清理和资源释放才会发生。</p>
+<h4 id="9-close函数"><a href="#9-close函数" class="headerlink" title="9. close函数"></a>9. close函数</h4><p>close函数用来关闭套接字，并终止TCP连接。<code>int close(int sockfd);</code>。close一个TCP套接字的默认行为是把该套接字标记成已关闭，然后立即返回到调用进程。该套接字的描述符不能再由调用进程使用。然而TCP将尝试发送已排队等待发送到对端的任何数据，发送完毕后发生的是正常的TCP连接终止序列。注意描述符引用计数。使用shutdown不需根据引用计数可以直接关闭。</p>
+<h4 id="10-getsockname和getpeername"><a href="#10-getsockname和getpeername" class="headerlink" title="10. getsockname和getpeername"></a>10. getsockname和getpeername</h4><p>返回与某个套接字关联的本地协议地址或者返回与某个套接字关联的外地协议地址。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/socket.h&gt;</span><br><span class="line">int getsockname(int sockfd, struct sockaddr *localaddr, socklen_t *addrlen);</span><br><span class="line">int getpeername(int sockfd, struct sockaddr *peeraddr, socklen_t *addrlen);</span><br><span class="line">//成功返回0，失败返回-1.</span><br></pre></td></tr></table></figure></p>
+<p>这两个函数的最后一个参数都是值-结果参数。这两个函数都得装填由localaddr或peeraddr指针所指的套接字地址结构。对于没有调用bind函数的TCP客户，connect成功返回后，getsockname用于返回由内核赋予该链接的本地IP地址和本地端口号。对于以端口号0调用bind（告知内核去选择本地端口号），使用getsockname用于返回由内核赋予的本地端口号。getpeername是服务器调用accept的某个进程通过调用exec执行程序时，能够获取客户身份的唯一途径。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/07/09/网络（4）/" data-id="cjjdxz4vr000wrpqw59q5todb" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2018/05/30/effective-c-（4）/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Älter</strong>
+      <div class="article-nav-title">effective c++（4）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/HSI/">HSI</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LLVM/">LLVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/effective-c/">effective c++</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/false-sharing/">false sharing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/复习/">复习</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/线程/">线程</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/网络/">网络</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 15px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 20px;">effective c++</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archiv</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">letzter Beitrag</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/07/09/网络（4）/">网络（4）.md</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/30/effective-c-（4）/">effective c++（4）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/29/effective-c-（3）/">effective c++（3）</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/25/false-sharing相关/">false sharing相关</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/14/面试复习（3）/">面试复习（3）</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  <script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+  </script>
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 小白拜拜拜<br>
+  	  <span id="busuanzi_container_site_pv">
+         本站总访问量<span id="busuanzi_value_site_pv"></span>次
+      </span> 
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

@@ -62,6 +62,70 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-网络（4）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/07/09/网络（4）/" class="article-date">
+  <time datetime="2018-07-09T07:14:47.000Z" itemprop="datePublished">2018-07-09</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/07/09/网络（4）/">网络（4）.md</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="1-值结果参数"><a href="#1-值结果参数" class="headerlink" title="1. 值结果参数"></a>1. 值结果参数</h4><p>进程-&gt;内核：共有三个函数bind、connect和sendto。参数是指向某个套接字地址结构的指针和该结构的整数大小：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">struct sockaddr_in serv;</span><br><span class="line">connect(sockfd, (SA*)&amp;serv, sizeof(serv));</span><br></pre></td></tr></table></figure></p>
+<p>内核-&gt;进程：共有四个函数accept、recvfrom、getsockname和getpeername。其中两个参数是指向某个套接字地质结构的指针和指向该结构大小的整数变量的指针。</p>
+<h4 id="2-字节排序函数"><a href="#2-字节排序函数" class="headerlink" title="2. 字节排序函数"></a>2. 字节排序函数</h4><p>例如存储16位两个字节，有两种方法，一种是将低序字节存储在起始地址，称为小端字节序，另一种将高序字节存储在起始地址，称为大端字节序。两种格式都有系统使用。把某个给定系统所用的字节序称为主机字节序。<br>x86使用小端，但是网际协议使用大端字节序来传送这些多字节整数。</p>
+<h4 id="3-inet-aton、inet-addr和inet-ntoa函数"><a href="#3-inet-aton、inet-addr和inet-ntoa函数" class="headerlink" title="3. inet_aton、inet_addr和inet_ntoa函数"></a>3. inet_aton、inet_addr和inet_ntoa函数</h4><p>inet_aton inet_addr和inet_ntoa在点分十进制数串与长度为32位的网络字节序二进制值间转换IPv4地址。相对较新的函数inet_pton和inet_ntop对于IPv4和IPv6地址都适用。</p>
+<p>inet_aton将strptr所指C字符串转换成一个32位网络字节序的二进制值，并通过指针addrptr来存储。若成功则返回1，否则返回0.<code>int inet_aton(const char* strptr, struct in_addr *addrptr)</code></p>
+<p>inet_addr进行相同的转换，但是所有的二进制值都是有效的IP地址，但是出错时函数返回全1.现已经废除。<code>in_add_t inet_addr(const char *strptr)</code><br></p>
+<p>inet_ntoa将32位的网络字节序二进制IPv4地址转换为相应的点分十进制数串。<code>char *inet_ntoa(struct in_addr inaddr)</code>。返回值所指向的字符串驻留在静态内存中。函数以一个结构而不是一个指针作为参数。<br></p>
+<p>inet_pton和inet_ntop是随着IPv6出现的新函数，对于IPv4和IPv6</p>
+<h4 id="4-MSL、TTL和RTT"><a href="#4-MSL、TTL和RTT" class="headerlink" title="4. MSL、TTL和RTT"></a>4. MSL、TTL和RTT</h4><p>MSL(maximum segment lifetime) 最大报文生存时间，每个TCP实现必须选择一个MSL, 它是任何报文段被丢弃前在网络内的最长时间，这个时间是有限的，因为TCP报文段以IP数据包在网络中传输，而IP有限制其生存时间的TTL时间。常用30秒，1分钟或两分钟。</p>
+<p>TTL（time to live）生存时间字段，不是具体时间，设置了数据报可以经过的最多路由器数，初始值由源主机设置。一旦经过一个处理的路由器就减去1.为0时就丢弃并发送ICMP报文通知源主机。</p>
+<p>RTT（round trp time）往返时间，TCP超时与重传中最总要的部分时对一个给定连接的往返时间RTT的测量。由于路由器和网络流量均会发生变化，因此这个时间会经常变化。</p>
+<p>TIME_WAIT状态：设置时间为2MSL, 可以假设具有最大跳限（255）的8位字段（TTL）分组在网络中存在时间不可能超过MSL秒。TIME_WATI状态存在的理由是</p>
+<ol>
+<li><p>可靠的实现TCP全双工的连接和终止。执行主动关闭的是处于TIME_WAIT状态的那一端。假设主动关闭的是客户端，第三次握手服务器端发送FIN,客户端发送ACK，假设ACK丢失，服务器会重传FIN，客户端发送ACK和服务器端重传FIN的最大时间是2MSL。客户端不重传ACK的原因是防止洪泛攻击。</p>
+</li>
+<li><p>允许老的重复分节在网络中消失。如果一个连接的IP地址和端口号都相等。需要防止老的重复分组在终止后重现，2MSL，足以让某个方向的分组最多存活MSL秒即被丢弃，另一个方向上的应答最多存活MSL秒即被丢弃。保证每次成功建立一个新的TCP连接时，老的重复分组在网络中消失。</p>
+</li>
+</ol>
+<h4 id="5-listen函数"><a href="#5-listen函数" class="headerlink" title="5. listen函数"></a>5. listen函数</h4><p>socket函数创建一个套接字时，被假设为一个主动套接字，是一个调用connect发起的客户套接字。listen函数可以把一个未连接的套接字转化成一个被动套接字。调用后导致套接字从CLOSED状态转换到LISTEN状态。<code>int listen(int sockfd, int backlog)</code>。其中第二个参数规定了内核应该未相应套接字排队的最大连接个数。通常用在socket和bind函数之后，在accept函数之前。内核为任何监听套接字维护两个队列，分别为未完成连接队列和已完成连接队列。未完成连接队列中每个SYN分节对应其中一项，已由某个客户发出并到达，服务器等待完成三次握手过程。已完成队列是指已经完成TCP三路握手过程的客户对应其中一项。这些套接字处于ESTABLISHED状态。backlog可以理解为超过两个队列的和的值。</p>
+<h4 id="6-accept函数"><a href="#6-accept函数" class="headerlink" title="6. accept函数"></a>6. accept函数</h4><p>accept函数由TCP服务器调用，用于从已经完成连接队列队头返回下一个已完成连接。如果连接队列为空则进程被投入睡眠。<code>int accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen)</code>。一个服务器通常仅创建一个监听套接字，它在服务器的声明期内一直存在。内核为每个由服务器进程接受的客户连接创建一个已连接套接字。当服务器完成对某个给定客户的服务时，相应的已连接套接字就关闭。如果对返回客户协议地址不感兴趣，可以把cliaddr和addrlen均置空。</p>
+<h4 id="7-fork函数和exec函数"><a href="#7-fork函数和exec函数" class="headerlink" title="7. fork函数和exec函数"></a>7. fork函数和exec函数</h4><p>fork函数时unix中派生新进程的唯一方法。<code>pid_t fork(void)</code>，fork函数调用一次却返回两次。他在调用进程（父进程）中返回一次，返回值时子进程的ID号，在子进程中又返回一次，返回值时0。因此返回值本身会告知当前进程是子进程还是父进程。如此设置的原因是父进程可能有很多子进程，但是子进程只有一个父进程很容易得到父进程的ID号。存放在硬盘上的可执行程序文件能够被Unix执行的唯一方法是：由一个现有进程调用六个exec函数中的某一个。</p>
+<h4 id="8-并发服务器"><a href="#8-并发服务器" class="headerlink" title="8. 并发服务器"></a>8. 并发服务器</h4><p>并发服务器的基本轮廓:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">pid_t pid;</span><br><span class="line">int listenfd, connfd;</span><br><span class="line">listenfd = Socket(AF_INET, SOCK_STREAM, 0);</span><br><span class="line">Bind(listenfd, (SA*)sockaddr, sizeof(sockaddr));</span><br><span class="line">Listen(listenfd, LISTENQ);</span><br><span class="line">for(;;)</span><br><span class="line">&#123;</span><br><span class="line">  connfd = Accept(listenfd, (SA*)NULL, NULL);</span><br><span class="line">  if((pid = Fork()) == 0)</span><br><span class="line">  &#123;</span><br><span class="line">    Close(listenfd);</span><br><span class="line">    doit(connfd);</span><br><span class="line">    Close(connfd);</span><br><span class="line">    exit(0)</span><br><span class="line">  &#125;</span><br><span class="line">  Close(connfd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>父进程调用了Close(connfd)却没有终止进程的原因是每个文件或套接字都有一个引用计数。类似于shared_ptr智能指针。引用增加时计数值加1，当进程关闭时计数值减1，当计值为0时套接字真正的清理和资源释放才会发生。</p>
+<h4 id="9-close函数"><a href="#9-close函数" class="headerlink" title="9. close函数"></a>9. close函数</h4><p>close函数用来关闭套接字，并终止TCP连接。<code>int close(int sockfd);</code>。close一个TCP套接字的默认行为是把该套接字标记成已关闭，然后立即返回到调用进程。该套接字的描述符不能再由调用进程使用。然而TCP将尝试发送已排队等待发送到对端的任何数据，发送完毕后发生的是正常的TCP连接终止序列。注意描述符引用计数。使用shutdown不需根据引用计数可以直接关闭。</p>
+<h4 id="10-getsockname和getpeername"><a href="#10-getsockname和getpeername" class="headerlink" title="10. getsockname和getpeername"></a>10. getsockname和getpeername</h4><p>返回与某个套接字关联的本地协议地址或者返回与某个套接字关联的外地协议地址。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/socket.h&gt;</span><br><span class="line">int getsockname(int sockfd, struct sockaddr *localaddr, socklen_t *addrlen);</span><br><span class="line">int getpeername(int sockfd, struct sockaddr *peeraddr, socklen_t *addrlen);</span><br><span class="line">//成功返回0，失败返回-1.</span><br></pre></td></tr></table></figure></p>
+<p>这两个函数的最后一个参数都是值-结果参数。这两个函数都得装填由localaddr或peeraddr指针所指的套接字地址结构。对于没有调用bind函数的TCP客户，connect成功返回后，getsockname用于返回由内核赋予该链接的本地IP地址和本地端口号。对于以端口号0调用bind（告知内核去选择本地端口号），使用getsockname用于返回由内核赋予的本地端口号。getpeername是服务器调用accept的某个进程通过调用exec执行程序时，能够获取客户身份的唯一途径。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/07/09/网络（4）/" data-id="cjjdxz4vr000wrpqw59q5todb" class="article-share-link">Teilen</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-effective-c-（4）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/05/30/effective-c-（4）/" class="article-date">
@@ -106,7 +170,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/30/effective-c-（4）/" data-id="cjhsf7cog000gduqwmapg2pe3" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/30/effective-c-（4）/" data-id="cjjdxz4v1000grpqwvsm3b61g" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -170,7 +234,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/29/effective-c-（3）/" data-id="cjhsf7cob000eduqwluzuvvew" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/29/effective-c-（3）/" data-id="cjjdxz4uz000erpqwh7t1fvu7" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -220,7 +284,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjhsf7coj000iduqwhtusvv6d" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjjdxz4v4000irpqwu99tmidh" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/false-sharing/">false sharing</a></li></ul>
@@ -262,7 +326,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjhsf7cpb0010duqwehehwgdm" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjjdxz4w60012rpqw7xqf3p6q" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -309,7 +373,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjhsf7co9000cduqwstdjiafa" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjjdxz4uu000crpqwcs7lwtwc" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -362,7 +426,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjhsf7co5000aduqw8gky91nh" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjjdxz4ur000arpqws83kdkvo" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -458,7 +522,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjhsf7cp0000uduqw64yvgk4e" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjjdxz4vm000urpqw778uy5zk" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -530,7 +594,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjhsf7cox000sduqwnxxd8vm8" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjjdxz4vi000srpqwzjurb1l8" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -624,58 +688,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjhsf7cov000qduqw40dz5vly" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjjdxz4vg000qrpqw1vmsorys" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-线程（3）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/04/27/线程（3）/" class="article-date">
-  <time datetime="2018-04-27T09:04:21.000Z" itemprop="datePublished">2018-04-27</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/04/27/线程（3）/">线程（3）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="线程间的通信机制-信号量"><a href="#线程间的通信机制-信号量" class="headerlink" title="线程间的通信机制-信号量"></a>线程间的通信机制-信号量</h4><h5 id="引例（生产者消费者问题）"><a href="#引例（生产者消费者问题）" class="headerlink" title="引例（生产者消费者问题）"></a>引例（生产者消费者问题）</h5><p><code>Producer</code>: 生产者，每个几秒生成一个物品，并放入缓冲区中。<br><code>Consumer</code>: 消费者，一旦发现缓冲区里有物品即可取走。<br>一个读一个写。<br>如何能保证即时取走？</p>
-<h6 id="轮询机制"><a href="#轮询机制" class="headerlink" title="轮询机制"></a>轮询机制</h6><p><code>Consumer</code>线程不知道何时有物品可以取，只是不停地去查询（比如每隔<code>50ms</code>查询一次，以便及时取走）轮询的间隔不能太大，否则缓冲区可能已经堆积如山了。主要代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">queue</span>&lt;<span class="keyword">int</span>&gt; q;</span><br><span class="line">OS_Mutex g_mutex;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Producer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">int</span> r = rand() % <span class="number">20</span> + <span class="number">1</span>;</span><br><span class="line">            q.push(r);</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"放入物品："</span> &lt;&lt; r &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">            Msleep(r * <span class="number">50</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Consumer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">while</span>(!q.empty())</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">int</span> tmp = q.front();</span><br><span class="line">                q.pop();</span><br><span class="line">                <span class="built_in">cout</span> &lt;&lt; <span class="string">"取出物品："</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">            Msleep(<span class="number">500</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>上段代码中，生产者和消费者之间是没有联系的，不能保证真正及时的取出来，查询不能太频繁（浪费<code>CPU</code>），不频繁的时候（缓存区满），难以把握，需要设计一个合理的轮询间隔。最好有一个通知机制：生产者把物品放进去之后，通知消费者，消费者接到通知后，再去取物品。这就出现了信号量机制。</p>
-<h6 id="信号量机制"><a href="#信号量机制" class="headerlink" title="信号量机制"></a>信号量机制</h6><p>信号量：<code>Semaphore</code>,用于实现线程间的通知机制（和<code>Mutex</code>一样，是一个系统级对象）。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">OS_Semaphore g_sem;</span><br><span class="line">第一个线程: Producer</span><br><span class="line">    g_sem.Post(); //通知</span><br><span class="line">第二个线程: Consumer</span><br><span class="line">    g_sem.Wait(); //等待通知</span><br></pre></td></tr></table></figure></p>
-<p><code>osapi</code>库的源代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> OS_Semaphore::Init(<span class="keyword">int</span> initial_value)</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = <span class="keyword">new</span> OS_Semaphore_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    m_Priv = priv;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sem_init(&amp;priv-&gt;hSem, <span class="number">1</span>, initial_value) &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">delete</span> priv;</span><br><span class="line">        m_Priv = <span class="literal">NULL</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> OS_Semaphore::wait()</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">if</span>(sem_wait(&amp;priv-&gt;hsem) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> OS_Semaphore::Post()</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span>;</span><br><span class="line">    sem_post(&amp;priv-&gt;hSem);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>信号量的值： <code>0, 1, 2, ..., N, ...</code><br>生产者可以一次放入多个物品，并将信号量的值增加。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">g_sem.Post();//信号量的值加1</span><br><span class="line">g_sem.Wait();//信号量的值减1。如果信号量的值为0，则线程进入等待状态（阻塞），此时不占用cpu。</span><br></pre></td></tr></table></figure></p>
-<p>使用信号量机制的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">queue</span>&lt;<span class="keyword">int</span>&gt; q;</span><br><span class="line">OS_Mutex g_mutex;</span><br><span class="line"><span class="function">OS_Semaphore <span class="title">g_sem</span><span class="params">(<span class="number">0</span>)</span></span>; <span class="comment">//将初始信号量设置为0</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Producer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">int</span> r = rand() % <span class="number">20</span> + <span class="number">1</span>;</span><br><span class="line">            q.push(r);</span><br><span class="line">            <span class="built_in">cout</span> &lt;&lt; <span class="string">"放入物品："</span> &lt;&lt; r &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">            g_sem.Post();</span><br><span class="line">            Msleep(r * <span class="number">50</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Consumer</span>:</span> <span class="keyword">public</span> OS_Thread&#123;</span><br><span class="line">    <span class="function">virtaul <span class="keyword">int</span> <span class="title">Routine</span><span class="params">()</span> override</span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">            g_sem.Wait();</span><br><span class="line">            g_mutex.Lock();</span><br><span class="line">            <span class="keyword">while</span>(!q.empty())</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">int</span> tmp = q.front();</span><br><span class="line">                q.pop();</span><br><span class="line">                <span class="built_in">cout</span> &lt;&lt; <span class="string">"取出物品："</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            g_mutex.Unlock();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>可以根据实际情况，将信号量的值初始化为<code>0</code>或其他正数，一般情况信号量的初始值由你的实现应用中对应的那个量决定，比如，缓冲区中的物品数量：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">OS_Semaphore g_sem(0);</span><br><span class="line">OS_Semaphore g_sem(10); //已经有了10个量</span><br></pre></td></tr></table></figure></p>
-<h6 id="超时等待机制"><a href="#超时等待机制" class="headerlink" title="超时等待机制"></a>超时等待机制</h6><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> ret = g_sem.Wait(<span class="number">1000</span>); <span class="comment">//ms</span></span><br><span class="line"><span class="keyword">if</span>(ret != <span class="number">0</span>) <span class="comment">//如果返回值不为0，表明已经超时</span></span><br><span class="line">&#123;<span class="comment">//超时处理&#125;</span></span><br></pre></td></tr></table></figure>
-<p><code>osapi</code>中超时处理的代码如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> OS_Semaphore::Wait(<span class="keyword">int</span> ms)</span><br><span class="line">&#123;</span><br><span class="line">    OS_Semaphore_Priv* priv = (OS_Semaphore_Priv*)m_Priv;</span><br><span class="line">    <span class="keyword">if</span>(!priv) <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    timeval tv_now;</span><br><span class="line">    gettimeofday(&amp;tv_now, <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    timespec ts;</span><br><span class="line">    ts.tv_sec = tv_now.tv_sec;</span><br><span class="line">    ts.tv_nsec = tv_now.tv_usec * <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> ns = ts.tv_nsec + (ms % <span class="number">1000</span>)  * <span class="number">1000000</span>;</span><br><span class="line">    ts.tv_nsec = ns % <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ns / <span class="number">1000000000</span>;</span><br><span class="line">    ts.tv_sec += ms / <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(sem_timedwait(&amp;priv-&gt;hSem, &amp;ts) != <span class="number">0</span>)</span><br><span class="line">    &#123;   </span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/线程（3）/" data-id="cjhsf7cos000oduqwnkdbnre1" class="article-share-link">Teilen</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/线程/">线程</a></li></ul>
 
     </footer>
   </div>
@@ -712,7 +728,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 15px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 20px;">effective c++</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/网络/" style="font-size: 15px;">网络</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 15px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 20px;">effective c++</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
     </div>
   </div>
 
@@ -721,7 +737,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archiv</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/04/">April 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/03/">March 2018</a></li></ul>
     </div>
   </div>
 
@@ -732,6 +748,10 @@
     <h3 class="widget-title">letzter Beitrag</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2018/07/09/网络（4）/">网络（4）.md</a>
+          </li>
         
           <li>
             <a href="/2018/05/30/effective-c-（4）/">effective c++（4）</a>
@@ -747,10 +767,6 @@
         
           <li>
             <a href="/2018/05/14/面试复习（3）/">面试复习（3）</a>
-          </li>
-        
-          <li>
-            <a href="/2018/05/11/effective-c-（2）/">effective c++（2）</a>
           </li>
         
       </ul>
