@@ -62,6 +62,105 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-backtrace-and-coredump" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/07/27/backtrace-and-coredump/" class="article-date">
+  <time datetime="2018-07-27T09:02:23.000Z" itemprop="datePublished">2018-07-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/07/27/backtrace-and-coredump/">backtrace and coredump</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="backtrace"><a href="#backtrace" class="headerlink" title="backtrace"></a>backtrace</h3><p>查看运行时函数调用的堆栈信息可以借助backtrace，一些内存检测工具如Valgrind和gdb均用到backtrace，函数原型如下：<br><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;exeinfo.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">backtrace</span><span class="params">(<span class="keyword">void</span> **buffer, <span class="keyword">int</span> size)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">char</span> **<span class="title">backtrace_symbols</span><span class="params">(<span class="keyword">void</span> *<span class="keyword">const</span> *buffer, <span class="keyword">int</span> size)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">backtrace_symbols_fd</span><span class="params">(<span class="keyword">void</span> *<span class="keyword">const</span> *buffer, <span class="keyword">int</span> size, <span class="keyword">int</span> fd)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>头文件中提供了三个相关的函数，backtrace函数用于获取堆栈的地址信息，backtrace_symbols函数把堆栈地址翻译成容易识别的字符串，backtrace_symbols_fd函数把字符串堆栈信息输出到文件中。</p>
+<p>backtrace函数，可以用来获取当前线程的函数调用堆栈，获取信息保存再buffer中，buffer是一个二级指针，<br>可以看作指针数组进行使用，数组中的元素类型是void*，即从堆栈中获取返回地址，每一个堆栈框架stack frame<br>都有一个返回地址，参数size用来指定buffer可以保存的 void* 元素最大值，函数返回值是buffer中实际获得<br>的void*个数，最大不超过参数size的大小。</p>
+<p>backtrace_symbols函数，将backtrace函数获取的信息buffer转换为一个字符串数组char**，每个字符串包含了相对<br>于buffer中对应元素的可打印信息，包括函数名，函数的偏移地址和实际的返回地址，size制定了数组的元素个数，可以<br>是backtrace函数的返回值，也可以小于这个值。返回值调用了malloc分配内存，为了防止内存泄漏，需要手动调用free来<br>释放这块内存。</p>
+<p>backtrace_symbols_fd函数，该函数与backtrace_symbols函数功能类似，不同的是，这个函数直接把结果输出到文件中。<br>没有调用malloc。</p>
+<ol>
+<li><p>使用上述函数时，如果使用gcc编译链接，需要加上”-rdynamic”参数，参数的意思时告诉ELF连接器添加“-export-dynamic”<br>标记，这样所有的符号信息symbols都会添加到动态符号表中，以便于查看完整的堆栈信息。</p>
+<ol>
+<li><p>static函数不会导出符号信息symbols，在backtrace中无效。</p>
+<ol>
+<li>有些编译器的优化选项对获得正确的函数调用栈有干扰，内联函数没有堆栈框架，删除框架指针也会导致无法正常破解堆栈内容。</li>
+</ol>
+<p>简单实例：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;execinfo.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line">      <span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line">      <span class="keyword">const</span> <span class="keyword">int</span> size = <span class="number">100</span>;</span><br><span class="line">      <span class="function"><span class="keyword">void</span> <span class="title">world1</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> j)</span></span></span><br><span class="line"><span class="function">      </span>&#123;</span><br><span class="line">              <span class="built_in">cout</span> &lt;&lt; <span class="string">"world1:"</span> &lt;&lt; i &lt;&lt; <span class="string">" "</span> &lt;&lt; j &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">                  <span class="keyword">void</span> *buffer[<span class="number">100</span>] = &#123;<span class="literal">NULL</span>&#125;;</span><br><span class="line">                      <span class="keyword">char</span> **trace = <span class="literal">NULL</span>;</span><br><span class="line">                          <span class="keyword">int</span> ret = backtrace(buffer, size);</span><br><span class="line">                              trace = backtrace_symbols(buffer, ret);</span><br><span class="line">                                  <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; ret; i++)</span><br><span class="line">                                              <span class="built_in">printf</span>(<span class="string">"%s\n"</span>, trace[i]);</span><br><span class="line">                                                  <span class="built_in">free</span>(trace);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">void</span> <span class="title">hello1</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">      </span>&#123;</span><br><span class="line">              <span class="built_in">cout</span> &lt;&lt; <span class="string">"hello1:"</span> &lt;&lt; i &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">                  world1(i, i + <span class="number">1</span>);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">void</span> <span class="title">world</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">      </span>&#123;</span><br><span class="line">              <span class="built_in">cout</span> &lt;&lt; <span class="string">"world:"</span> &lt;&lt; i &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">                  hello1(i + <span class="number">1</span>);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">void</span> <span class="title">hello</span><span class="params">(<span class="keyword">int</span> i)</span></span></span><br><span class="line"><span class="function">      </span>&#123;</span><br><span class="line">              <span class="built_in">cout</span> &lt;&lt; <span class="string">"hello:"</span> &lt;&lt; i &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">                  world(i + <span class="number">1</span>);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function">      </span>&#123;</span><br><span class="line">              hello(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">//运行结果</span></span><br><span class="line">      hello:<span class="number">1</span></span><br><span class="line">      world:<span class="number">2</span></span><br><span class="line">      hello1:<span class="number">3</span></span><br><span class="line">      world1:<span class="number">3</span> <span class="number">4</span></span><br><span class="line">      ./a.out(_Z6world1ii+<span class="number">0x96</span>) [<span class="number">0x400d23</span>]</span><br><span class="line">      ./a.out(_Z6hello1i+<span class="number">0x46</span>) [<span class="number">0x400dc6</span>]</span><br><span class="line">      ./a.out(_Z5worldi+<span class="number">0x41</span>) [<span class="number">0x400e09</span>]</span><br><span class="line">      ./a.out(_Z5helloi+<span class="number">0x41</span>) [<span class="number">0x400e4c</span>]</span><br><span class="line">      ./a.out(main+<span class="number">0xe</span>) [<span class="number">0x400e5c</span>]</span><br><span class="line">      /lib64/libc.so<span class="number">.6</span>(__libc_start_main+<span class="number">0xf5</span>) [<span class="number">0x7fa11f10eb35</span>]</span><br><span class="line">      ./a.out() [<span class="number">0x400bc9</span>]</span><br></pre></td></tr></table></figure>
+<p>_Z是函数名开始标识符，后面的数组代表函数名长度，后面跟随着函数名，然后是函数的参数，最后是偏移地址。</p>
+<p>上述结果可读性一般，可以使用demangle进行符号重组，函数原型如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;cxxabi.h&gt;</span><br><span class="line">      char* __cxa_demangle(const char* __mangled_name,</span><br><span class="line">                          char* __output_buffer,</span><br><span class="line">                                              size_t* __length,</span><br><span class="line">                                                                  int* __status);</span><br></pre></td></tr></table></figure>
+<p>cxxabi.h是一个C++函数运行时库，要用g++编译链接，gcc会有问题。__mangled_name即原符号信息，是个字符串，<br>以空字符结尾，__output_buffer用来保存符号重组后的信息，长度为__length，__status表示demangle结果，为<br>0时表示成功，返回值指向符号重组后的字符串首地址，字符串以空字符结尾。</p>
+</li>
+</ol>
+</li>
+</ol>
+<h3 id="coredump"><a href="#coredump" class="headerlink" title="coredump"></a>coredump</h3><p>当程序运行的过程中异常终止或崩溃，操作系统会将程序当时的内存状态记录下来，保存在一个文件中，这种行为称为<br>core dump（核心转储）。可以认为core dump是内存快照。实际上，除了内存信息之外，还有一些关键的程序运行状态<br>可以被保存下来，例如寄存器信息（程序指针、栈指针）、内存管理信息、其他处理器和操作系统状态和信息。coredump<br>对于编程人员诊断和调试程序是非常有帮助的，因为有些错误是很难重现的，例如指针异常，而core dump文件可再现程序<br>出错时的情景。</p>
+<h4 id="coredump产生"><a href="#coredump产生" class="headerlink" title="coredump产生"></a>coredump产生</h4><p>Linux中信号是一种异步事件处理的机制，每种信号对应有默认的操作，默认操作主要包括忽略信号（Ignore），暂停进程<br>(Stop)、终止进程（Terminate），终止并发生core dump(core)等。默认时下列会产生core dump.</p>
+<table>
+<thead>
+<tr>
+<th>signal</th>
+<th>action</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SIGQUIT</td>
+<td>CORE</td>
+<td>quit from keyboard</td>
+</tr>
+<tr>
+<td>SIGILL</td>
+<td>CORE</td>
+<td>Illegal Instruction</td>
+</tr>
+<tr>
+<td>SIGABRT</td>
+<td>CORE</td>
+<td>Abort signal from abort</td>
+</tr>
+<tr>
+<td>SIGSEGV</td>
+<td>CORE</td>
+<td>Invalid memory reference</td>
+</tr>
+<tr>
+<td>SIGTRAP</td>
+<td>CORE</td>
+<td>trace/breakpoint trap</td>
+</tr>
+</tbody>
+</table>
+<p>当然不仅限于上面的几种信号。这就是为什么我们使用 Ctrl+z 来挂起一个进程或者 Ctrl+C 结束一个进程均不会产生 core dump，<br>因为前者会向进程发出 SIGTSTP 信号，该信号的默认操作为暂停进程（Stop Process）；后者会向进程发出SIGINT 信号，该信号<br>默认操作为终止进程（Terminate Process）。同样上面提到的 kill -9 命令会发出 SIGKILL 命令，该命令默认为终止进程。而<br>如果我们使用 Ctrl+\ 来终止一个进程，会向进程发出 SIGQUIT 信号，默认是会产生 core dump 的。还有其它情景会产生 core<br>dump， 如：程序调用 abort() 函数、访存错误、非法指令等等。</p>
+<p>实例：<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stddef.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;signal.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;execinfo.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> g_iTestFlag = <span class="number">1</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ADDR_MAX_NUM 100</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CallbackSignal</span> <span class="params">(<span class="keyword">int</span> iSignalNo)</span> </span>&#123;</span><br><span class="line">        <span class="built_in">printf</span> (<span class="string">"CALLBACK: SIGNAL:\n"</span>, iSignalNo);</span><br><span class="line">            <span class="keyword">void</span> *pBuf[ADDR_MAX_NUM] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">                <span class="keyword">int</span> iAddrNum = backtrace(pBuf, ADDR_MAX_NUM);</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">"BACKTRACE: NUMBER OF ADDRESSES IS:%d\n\n"</span>, iAddrNum);</span><br><span class="line">                        <span class="keyword">char</span> ** strSymbols = backtrace_symbols(pBuf, iAddrNum);</span><br><span class="line">                            <span class="keyword">if</span> (strSymbols == <span class="literal">NULL</span>) &#123;</span><br><span class="line">                                        <span class="built_in">printf</span>(<span class="string">"BACKTRACE: CANNOT GET BACKTRACE SYMBOLS\n"</span>);</span><br><span class="line">                                                <span class="keyword">return</span>;</span><br><span class="line">                                                    &#125;</span><br><span class="line">                                                        <span class="keyword">int</span> ii = <span class="number">0</span>;</span><br><span class="line">                                                            <span class="keyword">for</span> (ii = <span class="number">0</span>; ii &lt; iAddrNum; ii++) &#123;</span><br><span class="line">                                                                        <span class="built_in">printf</span>(<span class="string">"%03d %s\n"</span>, iAddrNum-ii, strSymbols[ii]);</span><br><span class="line">                                                                            &#125;</span><br><span class="line">                                                                                <span class="built_in">printf</span>(<span class="string">"\n"</span>);</span><br><span class="line">                                                                                    <span class="built_in">free</span>(strSymbols);</span><br><span class="line">                                                                                        strSymbols = <span class="literal">NULL</span>;</span><br><span class="line">                                                                                            <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">FuncBadBoy</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">void</span>* pBadThing = <span class="built_in">malloc</span>(<span class="number">1024</span>*<span class="number">1024</span>*<span class="number">256</span>);</span><br><span class="line">            <span class="built_in">free</span> (pBadThing);</span><br><span class="line">                <span class="built_in">free</span> (pBadThing);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">FuncBadFather</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        FuncBadBoy();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv)</span></span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (g_iTestFlag) &#123;</span><br><span class="line">                    signal(SIGSEGV, CallbackSignal); <span class="comment">//截获SIGSEGV信号，检测异常并打印函数栈</span></span><br><span class="line">                        &#125;</span><br><span class="line">                            FuncBadFather();</span><br><span class="line">                                <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">不生成coredump情况：</span><br><span class="line">CALLBACK: SIGNAL:</span><br><span class="line">BACKTRACE: NUMBER OF ADDRESSES IS:<span class="number">8</span></span><br><span class="line"></span><br><span class="line"><span class="number">008</span> ./a.out() [<span class="number">0x400893</span>]</span><br><span class="line"><span class="number">007</span> /lib64/libc.so<span class="number">.6</span>(+<span class="number">0x35250</span>) [<span class="number">0x7f5c4f998250</span>]</span><br><span class="line"><span class="number">006</span> /lib64/libc.so<span class="number">.6</span>(cfree+<span class="number">0x1c</span>) [<span class="number">0x7f5c4f9e338c</span>]</span><br><span class="line"><span class="number">005</span> ./a.out() [<span class="number">0x40097c</span>]</span><br><span class="line"><span class="number">004</span> ./a.out() [<span class="number">0x400987</span>]</span><br><span class="line"><span class="number">003</span> ./a.out() [<span class="number">0x4009b6</span>]</span><br><span class="line"><span class="number">002</span> /lib64/libc.so<span class="number">.6</span>(__libc_start_main+<span class="number">0xf5</span>) [<span class="number">0x7f5c4f984b35</span>]</span><br><span class="line"><span class="number">001</span> ./a.out() [<span class="number">0x400779</span>]</span><br><span class="line"></span><br><span class="line">生成coredump情况：</span><br><span class="line"><span class="comment">//使用gdb进行调试，并使用backtrace</span></span><br><span class="line">Starting program: /root/C/interview/<span class="number">8</span>/backtrace/a.out</span><br><span class="line"></span><br><span class="line">Program received signal SIGSEGV, Segmentation fault.</span><br><span class="line">0x00007ffff727c38c in free () from /lib64/libc.so.6</span><br><span class="line">(gdb) bt</span><br><span class="line">#0  0x00007ffff727c38c in free () from /lib64/libc.so.6</span><br><span class="line">#1  0x000000000040079b in FuncBadBoy () at backtrace_ex2.cpp:15</span><br><span class="line">#2  0x00000000004007a6 in FuncBadFather () at backtrace_ex2.cpp:19</span><br><span class="line">#3  0x00000000004007b1 in main () at backtrace_ex2.cpp:24</span><br></pre></td></tr></table></figure></p>
+<p>相比而言，直接使用backtrace函数生成的信息不如coredump方便，但是使用backtrace函数就不会生成core文件，这解决了可能产生超大文件的问题。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/07/27/backtrace-and-coredump/" data-id="cjk3regvc0005vvqwp9xx4g6z" class="article-share-link">Teilen</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-网络（4）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/07/09/网络（4）/" class="article-date">
@@ -114,7 +213,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/07/09/网络（4）/" data-id="cjjdy2eb5000wu8qw9wc95qrw" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/07/09/网络（4）/" data-id="cjk3regx30014vvqwi8q12a8s" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -170,7 +269,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/30/effective-c-（4）/" data-id="cjjdy2eae000gu8qwjv9h8q5u" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/30/effective-c-（4）/" data-id="cjk3regw2000jvvqwydbhvmb8" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -234,7 +333,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/29/effective-c-（3）/" data-id="cjjdy2ea9000eu8qwua9jqvgx" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/29/effective-c-（3）/" data-id="cjk3regvq000dvvqw9r7kg37z" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -284,7 +383,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjjdy2eah000iu8qwumjcu1zr" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjk3regw4000lvvqw534citzo" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/false-sharing/">false sharing</a></li></ul>
@@ -326,7 +425,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjjdy2ebd0012u8qwat6yhsa0" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjk3regxv001kvvqwom6hy81t" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -373,7 +472,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjjdy2ea7000cu8qwnllv012l" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjk3regvl000avvqwnlawvwc3" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -426,7 +525,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjjdy2ea3000au8qw7i9if39l" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjk3regvs000fvvqwkbqk9ytl" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -522,7 +621,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjjdy2eay000uu8qww0frchxt" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjk3regwk000wvvqw28ly1as2" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -594,101 +693,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjjdy2eav000su8qwe9gq1r6n" class="article-share-link">Teilen</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-网络（1）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/04/27/网络（1）/" class="article-date">
-  <time datetime="2018-04-27T14:21:22.000Z" itemprop="datePublished">2018-04-27</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/04/27/网络（1）/">网络（1）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="网络通讯"><a href="#网络通讯" class="headerlink" title="网络通讯"></a>网络通讯</h4><h5 id="一些术语"><a href="#一些术语" class="headerlink" title="一些术语"></a>一些术语</h5><ol>
-<li>主机： <code>Host</code>,包含台式机、笔记本、手机等设备。</li>
-<li>网络： <code>Internet</code></li>
-<li>网络介质：<code>Media</code>：网线，光纤，无线网域网<code>wifi</code>，移动<code>3G</code>网络。</li>
-<li>数据：<code>Data</code>，一串字节。</li>
-</ol>
-<h5 id="网络通讯观测"><a href="#网络通讯观测" class="headerlink" title="网络通讯观测"></a>网络通讯观测</h5><p><code>wireshark</code>，“抓包”工具，抓，<code>capture</code>。包，<code>packet</code>,数据包。</p>
-<h5 id="IP地址"><a href="#IP地址" class="headerlink" title="IP地址"></a>IP地址</h5><p><code>Internet protocol Address</code>，网络协议地址，用于标识网络上的一台主机。<br>通常采用4字节表示，称为<code>IPv4</code>。用字符串表示时，采用10进制，以点号分开：<br><code>&quot;192.168.1.1&quot;</code>（家庭路由器地址）、<code>&quot;123.57.248.214&quot;</code>,用16进制表示<code>C0 A8 01 01</code>、<code>7B 39 F8 D6</code>。</p>
-<h5 id="ping：检测连通"><a href="#ping：检测连通" class="headerlink" title="ping：检测连通"></a>ping：检测连通</h5><p><code>windows/linux</code>下都有<code>ping</code>命令，它可以检查对方的主机是否能够连通。<code>ping 123.27.148.124</code>。如果能连通说明对方主机在线，否则请求超时有三种可能性：</p>
-<ol>
-<li>对方关机、离线</li>
-<li>己方没有连网。</li>
-<li>对方在线，但是屏蔽了<code>PING</code>服务。</li>
-</ol>
-<h5 id="查看自己的ip地址"><a href="#查看自己的ip地址" class="headerlink" title="查看自己的ip地址"></a>查看自己的ip地址</h5><p><code>windows: ipcofig linux: ifconfig</code></p>
-<h4 id="Socket复用技术"><a href="#Socket复用技术" class="headerlink" title="Socket复用技术"></a>Socket复用技术</h4><h5 id="Socket概念"><a href="#Socket概念" class="headerlink" title="Socket概念"></a>Socket概念</h5><p>两台主机进行通讯，运行不同的程序，它们都在使用网络进行数据的传输。<br>为什么一台主机上的多个程序可以同时使用网络？引入<code>Socket</code>概念，原意为“插座”，形象的表示用一根线连接两个插座，即形成一个数据通道。每个插口可以用一个数字标识（<code>0~65535</code>），这个数字就称为端口（<code>Port</code>）。<br>两个程序要进行通讯，就要各自选择一个插口，然后连接起来。<br>程序1：在<code>192.168.1.100</code>上运行，使用端口<code>9001</code>。<br>程序2：在<code>192.168.1.101</code>上运行，使用端口<code>9002</code>。<br>连接上来，就形成了一个数据通道，它们俩之间可以交流数据了（只是逻辑上的通道）。</p>
-<h5 id="复用技术"><a href="#复用技术" class="headerlink" title="复用技术"></a>复用技术</h5><p>在多个<code>socket</code>,每个<code>socket</code>上同时传输着不同的数据（视频、文件、网页下载等）。但是网线只有一根，字节是串行传输的，如何保证正确性？<br>可以采用<strong>封包</strong>的方法，将(<code>IP,Port</code>)放在包头。这种在一个信道中，交叉间隔的传输数据的方案，叫做“分时复用”。<code>Mux</code>，重复利用的意思。</p>
-<ol>
-<li>发送方：复用<code>Mux</code><br>将每个<code>Socket</code>上的数据，拆分成固定格式的小包，每个小包前面加上<code>IP/Port</code>，按照时间间隔，轮番发送到信道中。</li>
-<li>接收方：解复用<code>Demux</code><br>从信道中接收小包，根据包头里的Port，将小包还原成原始数据，再分发给不同的<code>Socket</code>处理。</li>
-</ol>
-<h6 id="大包拆分成小包"><a href="#大包拆分成小包" class="headerlink" title="大包拆分成小包"></a>大包拆分成小包</h6><p>一边拆一边合。每个包的包头加上一些标识。分包的目的是各个Socket均匀占用网络。</p>
-<h4 id="UDP-Socket"><a href="#UDP-Socket" class="headerlink" title="UDP Socket"></a>UDP Socket</h4><p><code>UDP</code>: <code>User Datagram Protocol</code>，用户数据报文协议。适用于局域网的主机间通信。两台主机上的程序，在知道了对方的<code>Socket</code>地址之后，就可以适用<code>UDP</code>传输数据。<br> 发送方：<code>UdpSocket sock; sock.sendTo(...)</code>。<br> 接收方：<code>UdpSocket sock; sock.RecvFrom(...)</code>。<br> 主要代码如下所示：<br> <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">//发送方</span></span><br><span class="line"><span class="function">OS_SockAddr <span class="title">local</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9000</span>)</span></span>; <span class="comment">//ip和端口号</span></span><br><span class="line">OS_UdpSocket sock;</span><br><span class="line">sock.Open(local, <span class="literal">true</span>);</span><br><span class="line"><span class="function">OS_SockAddr <span class="title">peer</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9001</span>)</span></span>;</span><br><span class="line"><span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; <span class="string">"发送方: port 9000"</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line"><span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"&gt;"</span>;</span><br><span class="line">    <span class="built_in">cin</span> &gt;&gt; buf;</span><br><span class="line">    <span class="keyword">int</span> len = <span class="built_in">strlen</span>(buf);</span><br><span class="line">    sock.SendTo(buf, len, peer);</span><br><span class="line">    <span class="keyword">if</span>(<span class="built_in">strcmp</span>(buf, <span class="string">"bye"</span>) == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br><span class="line">sock.Close();</span><br><span class="line"></span><br><span class="line"><span class="comment">//接收方</span></span><br><span class="line"><span class="function">OS_SockAddr <span class="title">local</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9001</span>)</span></span>;</span><br><span class="line">OS_UdpSocket sock;</span><br><span class="line">sock.open(local, <span class="literal">true</span>);</span><br><span class="line"><span class="function">OS_SockAddr <span class="title">peer</span><span class="params">(<span class="string">"127.0.0.1"</span>, <span class="number">9000</span>)</span></span>;</span><br><span class="line"><span class="keyword">char</span> buf[<span class="number">128</span>];</span><br><span class="line"><span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> n = sock.RecvFrom(buf, <span class="number">128</span>, peer);</span><br><span class="line">    <span class="keyword">if</span>(n &lt;= <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    buf[n] = <span class="number">0</span>; <span class="comment">//终止符</span></span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; <span class="string">"Got: "</span> &lt;&lt; buf &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">    <span class="keyword">if</span>(<span class="built_in">strcmp</span>(<span class="string">"bye"</span>, buf) == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">&#125;</span><br><span class="line">sock.Close();</span><br></pre></td></tr></table></figure></p>
-<h5 id="单机测试"><a href="#单机测试" class="headerlink" title="单机测试"></a>单机测试</h5><p>正常情况下，<code>Socket</code>编程的目的是为了将数据传送到另一台主机，因此需要两台主机才可以完成测试。例如<code>192.168.1.100 -&gt; 192.168.1.101</code>。当没有多主机环境时，可以使用单机测试，目标地址为<code>127.0.0.1</code>，表示本机。当指定发送目标为<code>127.0.0.1</code>时，发送的数据不经过网卡，直接在系统内回环送回。又称为<code>loopback</code>地址（回环地址）。<code>wireshark</code>无法监测<code>loopback</code>上的数据，因为根本没有通过网卡传送。</p>
-<h5 id="多机测试"><a href="#多机测试" class="headerlink" title="多机测试"></a>多机测试</h5><p>局域网下的多机测试，可以在一台交换机上插上两台主机，构建一个局域网，然后两台主机间可以通讯。如果没有两台主机，可以使用虚拟机构建多机测试环境。保证在同一个网段，将<code>ip</code>地址与子网掩码做与运算（默认<code>255.255.255.0</code>），如果相同则在同一个网段。<code>wireshark</code>中有实现过滤和事后过滤。</p>
-<h4 id="内部缓冲区"><a href="#内部缓冲区" class="headerlink" title="内部缓冲区"></a>内部缓冲区</h4><p><code>SendTo()</code>和<code>RecvFrom()</code>是由系统来完成的。那么</p>
-<ol>
-<li>在调用<code>SendTo</code>的时候，系统是立即发送的么？</li>
-<li>在调用<code>RecvFrom</code>的时候，系统是接到命令再去接收的么？<br>在系统内部，每个<code>Socket</code>关联了两个缓冲区(<code>Buffer</code>)，一个用于发送，一个用于接收。缓冲区实际上就是一片内存，用于暂时存储数据。</li>
-</ol>
-<h5 id="发送过程"><a href="#发送过程" class="headerlink" title="发送过程"></a>发送过程</h5><ol>
-<li><code>SendTo</code>把数据放在<code>SendBuf</code>里，通知<code>OS</code>来取。</li>
-<li><code>OS</code>在适当的时候过来取数据，并发送到网络。<br>这意味着存入数据和发送数据存在着时间差，如果数据存入太快太多，发送缓冲区可能会满。</li>
-</ol>
-<h5 id="接收过程"><a href="#接收过程" class="headerlink" title="接收过程"></a>接收过程</h5><ol>
-<li><code>OS</code>不停把从网络上接收的数据存储到<code>RecvBuf</code>里。</li>
-<li><code>RecvFrom</code>从缓冲区中取数据。<br>这意味着不论是否去取数据，<code>OS</code>总是默默的把数据先接收下来存储好，<code>RecvFrom</code>是从<code>RecvBuf</code>里取走现成的数据。如果不及时取走，则缓冲区可能会满。</li>
-</ol>
-<p>发送和接收是一个异步过程，发送的时候，先把数据放入缓冲区中，然后由<code>OS</code>安排发送，接收的时候，由<code>OS</code>先接收下来存在缓冲区，而<code>RecvFrom</code>只是从缓冲区取走现成的数据。</p>
-<h5 id="“缓冲区满”的处理"><a href="#“缓冲区满”的处理" class="headerlink" title="“缓冲区满”的处理"></a>“缓冲区满”的处理</h5><h6 id="发送数据"><a href="#发送数据" class="headerlink" title="发送数据"></a>发送数据</h6><ol>
-<li>直到缓冲区有剩余空间（阻塞）。</li>
-<li>新发送的数据没有存入缓冲区。</li>
-</ol>
-<h6 id="接收数据"><a href="#接收数据" class="headerlink" title="接收数据"></a>接收数据</h6><ol>
-<li>新的数据不被接收。</li>
-<li>删除缓冲区里的现有数据，存放新的数据<br>1和2都会引起丢包现象</li>
-</ol>
-<h6 id="设置发送-接收缓冲区的大小"><a href="#设置发送-接收缓冲区的大小" class="headerlink" title="设置发送/接收缓冲区的大小"></a>设置发送/接收缓冲区的大小</h6><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">setsocketopt(sock.hSock, SOL_SOCKET, <span class="comment">//opt即为option</span></span><br><span class="line">    SO_SENBUF, <span class="comment">//代表sendBuf，SO_RCVBUF代表recvBuf</span></span><br><span class="line">    (<span class="keyword">const</span> <span class="keyword">char</span>*)&amp;bufsize,</span><br><span class="line">    <span class="keyword">sizeof</span>(<span class="keyword">int</span>)</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
-<p>设置成功与否由操作系统决定。</p>
-<h6 id="丢包问题"><a href="#丢包问题" class="headerlink" title="丢包问题"></a>丢包问题</h6><p>一般情况下，设置缓冲区的大小并不能解决“丢包”问题。<br>要注意一下三个方面：</p>
-<ol>
-<li>发送是否均匀。</li>
-<li>接收是否及时。</li>
-<li>接收带宽是否超过实际传输带宽。发送数据量过大会丢包。视频包可能会出现。<br>另外，即使<code>HostA</code>和<code>HostB</code>处理的都没有问题，网络上的任意一个中间节点设备都有可能丢包。丢包问题对于<code>USP</code>来说是很常见的，再设计是就要考虑到这一点，再决定使用<code>UDP</code>的时候就应该允许丢包，要做的是尽量的减少丢包。</li>
-</ol>
-<h6 id="适合UDP传输的情况"><a href="#适合UDP传输的情况" class="headerlink" title="适合UDP传输的情况"></a>适合UDP传输的情况</h6><p>允许丢包的场合，比如每秒钟把设备的实时数据发送给管理主机，在管理主机的界面上显示。这种情况即使丢了一次包，也没有太大关系，下次会继续发送的。但是当传输压缩文件*.rar，如果丢了一个包，整个文件就损坏了。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/04/27/网络（1）/" data-id="cjjdy2ear000qu8qwrevoabma" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/04/30/网络（2）/" data-id="cjk3regwo000yvvqwanwd5rpv" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -750,6 +755,10 @@
       <ul>
         
           <li>
+            <a href="/2018/07/27/backtrace-and-coredump/">backtrace and coredump</a>
+          </li>
+        
+          <li>
             <a href="/2018/07/09/网络（4）/">网络（4）</a>
           </li>
         
@@ -763,10 +772,6 @@
         
           <li>
             <a href="/2018/05/25/false-sharing相关/">false sharing相关</a>
-          </li>
-        
-          <li>
-            <a href="/2018/05/14/面试复习（3）/">面试复习（3）</a>
           </li>
         
       </ul>
