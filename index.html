@@ -84,13 +84,54 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <p>僵死子进程，通过捕获SIGCHLD信号进行处理，处理函数必须调用waitpid函数而不是wait函数，因为Unix信号是不排队的。<code>waitpid(-1, &amp;stat, WNOHANG)</code>，WHOHANG告知waitpid在有尚未终止的子进程在运行时不要阻塞。设置僵死状态的目的是维护子进程的信息，以便父进程在以后的某个时候获取。包括子进程的进程ID，终止状态以及资源利用信息等。</p>
+<p>当服务器进程终止时，客户进程没被告知。可以看到客户的TCP确实被告知了，但是客户进程由于正阻塞于等待用户输入而未接收到该通知。可以通过select和poll函数来处理这种情况。它们等待多个描述符中的任何一个就绪而不是阻塞于单个描述符。</p>
+<p>服务器主机崩溃的情况需要等到客户向服务器发送数据才能检测到。有些应用进程要求能够尽早了解这个事实。解决数据格式问题的常用方法是把所有的数值作为文本串进行传递。或者显示定义所支持数据类型的二进制格式。</p>
+<h3 id="select-和-poll函数"><a href="#select-和-poll函数" class="headerlink" title="select 和 poll函数"></a>select 和 poll函数</h3><p>客户阻塞于标准输入调用期间，服务器进程被杀死。服务器TCP虽然正确的发送了FIN,但是由于客户进程正阻塞于读入过程，所以无法得到EOF，这样的进程需要一种预先告知内核的能力，使得内核一旦发现进程指定的一个或多个I/O条件就绪（输入准备好被读取，或者描述符已经能承接更多的输出）就通知进程。这个能力称为I/O复用。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">void str_cli(FILE *fp, int sockfd)</span><br><span class="line">&#123;</span><br><span class="line">    char sendline[MAXLINE], recvline[MAXLINE];</span><br><span class="line">    while(Fgets(sendline, MAXLINE, fp) != NULL)</span><br><span class="line">    &#123;   </span><br><span class="line">        Writen(sockfd, sendline, strlen(sendline));</span><br><span class="line">        if(Readline(sockfd, recvline, MAXLINE) == 0)</span><br><span class="line">            err_quit(&quot;str_cli: server terminated prematurely&quot;);</span><br><span class="line">        Fputs(recvline, stdout);</span><br><span class="line">    &#125;   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>I/O复用典型场合：当客户处理多个描述符时（通常是交互式输入和网络套接字），一个客户同时处理多个套接字时，TCP服务器既要处理监听套接字，又要处理已连接套接字时，服务器即要处理TCP又要处理UDP时。</p>
+<h4 id="unix下可用的五种I-O模型"><a href="#unix下可用的五种I-O模型" class="headerlink" title="unix下可用的五种I/O模型"></a>unix下可用的五种I/O模型</h4><p>阻塞式I/O、非阻塞式I/O、I/O复用(select和poll)、信号驱动式I/O(SIGIO)、异步I/O(POSIX的aio_系列函数)。<br><br>一个输入操作通常包括两个阶段：等待数据准备好，以及从内核中复制数据。对于套接字上的输入，第一步通常涉及等待数据从网络中到达。当所有等待分组到达时，它被复制到内核的某个缓冲区。第二步是把数据从内核缓冲区复制到应用缓冲区。</p>
+<ol>
+<li><p>阻塞式I/O：调用recvfrom函数，视为系统调用，进程调用直到数据报到达且被复制到应用进程的缓冲区中或者发生错误才会返回。最常见的错误是信号中断，进程在从调用recvfrom开始到它返回的整段时间内是被阻塞的。recvfrom成功返回后，应用进程开始处理数据报。</p>
+</li>
+<li><p>非阻塞式I/O：进程把一个套接字设置成非阻塞是在通知内核：当所请求的I/O操作非得把本进程投入睡眠才能完成时，不要将进程投入睡眠，而是返回一个错误。可能前几次调用recvfrom时没有数据返回，因而内核转而返回一个EWOULDBLOCK错误。第四次调用recvfrom时已有一个数据报准备好，它被复制到应用进程缓冲区，于是recvfrom成功返回。接着处理数据。当一个应用进程对一个非阻塞描述符循环调用recvfrom时，我们称之未轮询。应用进程持续轮询内核，以查看某个操作是否就绪。这样做往往会耗费大量时间。</p>
+</li>
+<li><p>I/O复用模型：有了I/O复用，可以调用select或poll，阻塞在这两个系统调用中的某一个之上，而不是阻塞在真正的I/O系统调用上。我们阻塞于select调用，等待数据报套接字变为可读。当select返回套接字可读这一条件时，我们调用recvfrom把所读数据报复制到应用进程缓冲区。</p>
+</li>
+<li><p>信号驱动式I/O模型：可以使用信号让内核在描述符就绪时发送SIGIO信号通知我们。我们称这种模型为信号驱动式I/O。通过系统调用安装一个信号处理函数，当系统调用将立即返回，我们的进程继续工作，即没有被阻塞。当数据报准备好读取时，内核就为该进程产生一个SIGIO信号。随后可以进行处理。无论如何处理，优势在于等待数据报到达期间进程不被阻塞。主循环可以继续执行，只要等待来自信号处理函数的通知。</p>
+</li>
+<li><p>异步I/O模型：由POSIX规范定义。一般而言这些函数的工作机制是告知内核启动某个操作，并让内核在整个操作完成后通知（包括数据从内核复制到自己的缓冲区）。</p>
+</li>
+</ol>
+<p>前四种模型均属于同步I/O模型，因为其中真正的I/O操作将阻塞进程。只有异步I/O模型于POSIX定义的异步I/O相匹配。</p>
+<h4 id="select函数"><a href="#select函数" class="headerlink" title="select函数"></a>select函数</h4><p><code>int select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, const struct timeval *timeout);</code><br>仅在下列情况发生时才返回：集合{1，4，5}中的任何描述符准备好读，集合{2，7}中的任何描述符准备好写，集合{1，4}中的任何描述符有异常条件待处理。select函数修改由指针readset、writeset和exceptset所指向的描述符集合，因而这三个参数都是值结果参数。调用该函数时，指定所关心的描述符的值，函数返回时，结果将指示哪些描述符已就绪。返回后使用FD_ISSET宏来测试fd_set数据类型中的描述符。与未就绪描述符对应的位返回时均清空成0.所以每次重新调用select函数时，都得再次把所有描述符集合内所关心的位置为1.</p>
+<p>描述符就绪条件：<br>读操作：该套接字接收缓冲区中的数据字节数大于等于套接字接收缓冲区低水位标记的当前大小。该连接的读半部关闭（接受了FIN的TCP连接，将返回0 EOF）。该套接字是一个监听套接字且已完成的连接数不为0，accept通常不会阻塞。有一个套接字错误待处理。<br>写操作：该套接字发送缓冲区中的可用空间字节数大于等于套接字发送缓冲区低水位标记的当前大小，并且或者套接字已连接，或者不需要连接（UDP）。写半部关闭。非阻塞式connect套接字已建立连接，或者已经以失败告终。有一个套接字错误待处理。</p>
+<p>select函数几乎在所有平台上支持，select函数的缺点是单个进程能够监视的文件描述符存在最大限制，在linux上通常是1024，select本质上是通过设置或者检查存放fd标志位的数据结构来进行下一步处理。缺点是单个进程打开的FD是有限制的，它由FD_SETSIZE设置，默认值为1024.同时对socket进行扫描是线性扫描，即采用轮询的方法，效率较低。如果能给套接字注册某个回调函数，当他们活跃时，自动完成相关操作，那就避免了轮询，这正时epoll与kqueue做的。需要维护一个用来存放大量fd的数据结构。</p>
+<h4 id="shutdown函数"><a href="#shutdown函数" class="headerlink" title="shutdown函数"></a>shutdown函数</h4><p>终止网络连接的常用方法是调用Close函数。不过Close函数有两个限制，可以使用shutdown来避免。</p>
+<ol>
+<li>close把描述符的引用计数减1，仅在该计数变为0时才关闭套接字。使用shutdown可以不管引用计数就激发TCP正常连接终止序列。</li>
+<li>close终止读和写的两个方向数据传送。TCP连接是全双工的，有时需要告知对端我们完成了数据发送，即使对端仍有数据要发给我们。</li>
+</ol>
+<p><code>int shutdown(int sockfd, int howto)</code><br>该函数的行为依赖于howto参数的值。SHUT_RD:关闭连接的读这一半，套接字中不再有数据可以接收，而且套接字接收缓冲区中的现有数据被丢弃。进程不能再对这样的套接字调用任何度函数。SHUT_WR：关闭连接的写这一半，当前留在套接字发送缓冲区中的数据将被发送掉。SHUT_RDWR：读半部和写半部都关闭。<br><br>str_cli函数正确版本，使用了select和shutdown。前者只要服务器关闭那一端连接会通知我们，后者允许正确的处理批量输入。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">void str_cli(FILE *fp, int sockfd)</span><br><span class="line">&#123;</span><br><span class="line">  int maxfdp1, stdineof;</span><br><span class="line">  fd_set rset;</span><br><span class="line">  char buf[MAXLINE];</span><br><span class="line">  int n;</span><br><span class="line"></span><br><span class="line">  stdineof = 0;</span><br><span class="line">  for( ; ; )</span><br><span class="line">  &#123;</span><br><span class="line">      if(stdineof == 0)</span><br><span class="line">        FD_SET(fileno(fp), &amp;rset);</span><br><span class="line">      FD_SET(sockfd, &amp;rset);</span><br><span class="line">      maxfdp1 = max(fileno(fp), sockfd) + 1;</span><br><span class="line">      Select(maxfdp1, &amp;rset, NULL, NULL, NULL);</span><br><span class="line">      if(FD_ISSET(sockfd, &amp;rset))</span><br><span class="line">      &#123;</span><br><span class="line">        if((n = Read(sockfd, buf, MAXLINE)) == 0)</span><br><span class="line">        &#123;</span><br><span class="line">          if(stdineof == 1)</span><br><span class="line">            return;</span><br><span class="line">          err_quit(&quot;str_cli: server terminated prematurely&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        Write(flieno(stdout), buf, n);</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      if(FD_ISSET(fileno(fp), &amp;rset))</span><br><span class="line">      &#123;</span><br><span class="line">        if((n == Read(fileno(fp), buf, MAXLINE)) == 0)</span><br><span class="line">        &#123;</span><br><span class="line">          stdineof = 1;</span><br><span class="line">          Shutdown(sockfd, SHUT_WR);</span><br><span class="line">          FD_CLR(fileno(fp), &amp;rset);</span><br><span class="line">          continue;</span><br><span class="line">        &#125;</span><br><span class="line">        Write(sockfd, buf, n);</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>服务器端回射程序：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line">int main(int argc, char **argv)</span><br><span class="line">&#123;</span><br><span class="line">    int i, maxi, maxfd, listenfd, connfd, sockfd;</span><br><span class="line">    int nready, client[FD_SETSIZE];</span><br><span class="line">    ssize_t n;</span><br><span class="line">    fd_set rset, allset;</span><br><span class="line">    char buf[MAXLINE];</span><br><span class="line">    socklen_t clilen;</span><br><span class="line">    struct sockaddr_in cliaddr, servaddr;</span><br><span class="line"></span><br><span class="line">    listenfd = Socket(AF_INET, SOCK_STREAM, 0);</span><br><span class="line">    bzero(&amp;servaddr, sizeof(servaddr));</span><br><span class="line">    servaddr.sin_family = AF_INET;</span><br><span class="line">    servaddr.sin_port = htons(SERV_PORT);</span><br><span class="line">    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);</span><br><span class="line"></span><br><span class="line">    Bind(listenfd, (SA*)&amp;servaddr, sizeof(servaddr));</span><br><span class="line">    Listen(listenfd, LISTENQ);</span><br><span class="line"></span><br><span class="line">    maxfd = listenfd;</span><br><span class="line">    maxi = -1;</span><br><span class="line">    for(i = 0; i &lt; FD_SETSIZE; i++)</span><br><span class="line">        client[i] = -1;</span><br><span class="line">    FD_ZERO(&amp;allset);</span><br><span class="line">    FD_SET(listenfd, &amp;allset);</span><br><span class="line"></span><br><span class="line">    for( ; ; )</span><br><span class="line">    &#123;   </span><br><span class="line">        rset = allset;</span><br><span class="line">        nready = Select(maxfd + 1, &amp;rset, NULL, NULL, NULL);</span><br><span class="line"></span><br><span class="line">        if(FD_ISSET(listenfd, &amp;rset))</span><br><span class="line">        &#123;   </span><br><span class="line">            clilen = sizeof(cliaddr);</span><br><span class="line">            connfd = Accept(listenfd, (SA*)&amp;cliaddr, &amp;clilen);</span><br><span class="line">            for(i = 0; i &lt;= FD_SETSIZE; i++)</span><br><span class="line">            &#123;   </span><br><span class="line">                if(client[i] &lt; 0)</span><br><span class="line">                &#123;</span><br><span class="line">                    client[i] = connfd;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            if(i == FD_SETSIZE)</span><br><span class="line">                err_quit(&quot;too many clients&quot;);</span><br><span class="line">            FD_SET(connfd, &amp;allset);</span><br><span class="line">            if(connfd &gt; maxfd)</span><br><span class="line">                maxfd = connfd;</span><br><span class="line">            if(i &gt; maxi)</span><br><span class="line">                maxi = i;</span><br><span class="line">            if(--nready &lt;= 0)</span><br><span class="line">                continue;</span><br><span class="line">        &#125;</span><br><span class="line">        else</span><br><span class="line">        &#123;</span><br><span class="line">            for(i = 0; i &lt;= maxi; i++)</span><br><span class="line">            &#123;</span><br><span class="line">                if((sockfd = client[i]) &lt; 0)</span><br><span class="line">                    continue;</span><br><span class="line">                if(FD_ISSET(client[i], &amp;rset))</span><br><span class="line">                &#123;</span><br><span class="line">                    if((n = Read(sockfd, buf, MAXLINE)) == 0)</span><br><span class="line">                    &#123;</span><br><span class="line">                        Close(sockfd);</span><br><span class="line">                        FD_CLR(sockfd, &amp;allset);</span><br><span class="line">                        client[i] = -1;</span><br><span class="line">                    &#125;</span><br><span class="line">                    else</span><br><span class="line">                        Write(sockfd, buf, n);</span><br><span class="line"></span><br><span class="line">                    if(--nready &lt;= 0)</span><br><span class="line">                        break;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>拒绝服务型攻击：当一个服务器在处理多个客户时，绝对不能阻塞于只与单个客户相关的某个函数调用。否则可能导致服务器被挂起，拒绝为所有其他客户提供服务。即为拒绝服务型攻击。它针对服务器做些动作，导致服务器不再能为其他合肥客户提供服务。可能的解决方法为：使用非阻塞式I/O；让每个客户由单独的控制线程提供服务（创建子进程或者子线程来服务每个客户）；对I/O操作设置超时。</p>
+<h4 id="pselect函数"><a href="#pselect函数" class="headerlink" title="pselect函数(?)"></a>pselect函数(?)</h4><p>pselect函数是由POSIX发明的<code>int pselect(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset, const struct timespec *timeout, const sigset_t *sigmask);</code>，若有就绪描述符则返回其数据，若超时则为0，若出错则为-1。与select相比有两个变化。</p>
+<ol>
+<li>pselect使用timespec结构，而不是用timeval结构。timespec结构时POSIX的又一发明，新结构的成员指定纳秒数，而旧结构的成员指定微秒数。</li>
+<li>pselect增加了第六个参数：一个指向信号掩码的指针。该参数允许程序先禁止递交某些信号，再测试由这些当前被禁止信号的信号处理函数设置的全局变量，然后调用pselect，告知重新设置信号掩码。</li>
+</ol>
+<h4 id="poll函数"><a href="#poll函数" class="headerlink" title="poll函数"></a>poll函数</h4><p>poll提供的功能与select类似，不过在处理流设备时，他能够提供额外的信息。<code>int poll(struct pollfd *fdarray, unsigned long nfds, int timeout);</code>。若有就绪描述符则为其数目，若超时则为0，若出错则为-1。第一个参数指向数组，每个数组都是pollfd结构。用于指定某个给定描述符fd的条件。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct pollfd&#123;</span><br><span class="line">  int fd;</span><br><span class="line">  short events;</span><br><span class="line">  short revents;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>要测试的条件由events成员指定，函数在相应的revents成员中返回该描述符的状态。每个描述符都有两个变量，一个为调用值，另一个为返回结果，从而避免使用值-结果参数。<br>poll本质上与select没有区别，它将用户传入的数组拷贝到内核空间，然后查询每个fd对应的设备状态，如果设备就绪则在设备等待队列中加入一项并继续遍历，它没有最大连接数的限制，原因时它基于链表来存储，缺点时大量的fd数据被整体付之于用户态和地核地址空间之间，还有水平触发的特点，如果报告了fd没有处理，下次poll会再次报告该fd。</p>
+<h4 id="epoll函数"><a href="#epoll函数" class="headerlink" title="epoll函数"></a>epoll函数</h4><p>它是之前的select和poll的增强版本。相对于select和poll来说，epoll更加灵活，也没有描述符限制。epoll使用一个文件描述符管理多个描述符，将用户关系的文件描述符事件存放到内核的一个时间表中，这样在用户空间和内核空间只需拷贝一次。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">for( ; ; )</span><br><span class="line">    &#123;</span><br><span class="line">        nfds = epoll_wait(epfd,events,20,500);</span><br><span class="line">        for(i=0;i&lt;nfds;++i)</span><br><span class="line">        &#123;</span><br><span class="line">            if(events[i].data.fd==listenfd) //有新的连接</span><br><span class="line">            &#123;</span><br><span class="line">                connfd = accept(listenfd,(sockaddr *)&amp;clientaddr, &amp;clilen); //accept这个连接</span><br><span class="line">                ev.data.fd=connfd;</span><br><span class="line">                ev.events=EPOLLIN|EPOLLET;</span><br><span class="line">                epoll_ctl(epfd,EPOLL_CTL_ADD,connfd,&amp;ev); //将新的fd添加到epoll的监听队列中</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            else if( events[i].events&amp;EPOLLIN ) //接收到数据，读socket</span><br><span class="line">            &#123;</span><br><span class="line">                n = read(sockfd, line, MAXLINE)) &lt; 0    //读</span><br><span class="line">                ev.data.ptr = md;     //md为自定义类型，添加数据</span><br><span class="line">                ev.events=EPOLLOUT|EPOLLET;</span><br><span class="line">                epoll_ctl(epfd,EPOLL_CTL_MOD,sockfd,&amp;ev);//修改标识符，等待下一个循环时发送数据，异步处理的精髓</span><br><span class="line">            &#125;</span><br><span class="line">            else if(events[i].events&amp;EPOLLOUT) //有数据待发送，写socket</span><br><span class="line">            &#123;</span><br><span class="line">                struct myepoll_data* md = (myepoll_data*)events[i].data.ptr;    //取数据</span><br><span class="line">                sockfd = md-&gt;fd;</span><br><span class="line">                send( sockfd, md-&gt;ptr, strlen((char*)md-&gt;ptr), 0 );        //发送数据</span><br><span class="line">                ev.data.fd=sockfd;</span><br><span class="line">                ev.events=EPOLLIN|EPOLLET;</span><br><span class="line">                epoll_ctl(epfd,EPOLL_CTL_MOD,sockfd,&amp;ev); //修改标识符，等待下一个循环时接收数据</span><br><span class="line">            &#125;</span><br><span class="line">            else</span><br><span class="line">            &#123;</span><br><span class="line">                //其他的处理</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/07/28/I-O模型/" data-id="cjk4w3h5w0004nwqw5wuxbc1d" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/07/28/I-O模型/" data-id="cjk4w50040004qmqwx57hh0e3" class="article-share-link">Teilen</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
+
     </footer>
   </div>
   
@@ -179,7 +220,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/07/27/backtrace-and-coredump/" data-id="cjk4w3h7j000fnwqwcjcu8ep3" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/07/27/backtrace-and-coredump/" data-id="cjk4w500q000cqmqw3bfausbc" class="article-share-link">Teilen</a>
       
       
     </footer>
@@ -241,7 +282,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/07/09/网络（4）/" data-id="cjk4w3h8m0010nwqw4tdv1h9q" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/07/09/网络（4）/" data-id="cjk4w502l0016qmqwbc2xslp7" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -297,7 +338,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/30/effective-c-（4）/" data-id="cjk4w3h7w000knwqw768jwsyy" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/30/effective-c-（4）/" data-id="cjk4w5021000qqmqwrloldswb" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -361,7 +402,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/29/effective-c-（3）/" data-id="cjk4w3h7u000jnwqw46weecmp" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/29/effective-c-（3）/" data-id="cjk4w501s000pqmqwtkk9fr95" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -411,7 +452,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjk4w3h7z000lnwqwpouukmaj" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/25/false-sharing相关/" data-id="cjk4w5024000sqmqwdwfsujjo" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/false-sharing/">false sharing</a></li></ul>
@@ -453,7 +494,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjk4w3h8v0016nwqw8j7yjf9r" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/14/面试复习（3）/" data-id="cjk4w502v001dqmqw8wdx9mbb" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/复习/">复习</a></li></ul>
@@ -500,7 +541,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjk4w3h7s000hnwqwuvz6e5kz" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/11/effective-c-（2）/" data-id="cjk4w500x000gqmqwx62t655e" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -553,7 +594,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjk4w3h7p000gnwqw92bbq77y" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/08/effective-c-（1）/" data-id="cjk4w500u000eqmqwgwqb4izr" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/effective-c/">effective c++</a></li></ul>
@@ -649,7 +690,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjk4w3h8j000ynwqwf5e24tac" class="article-share-link">Teilen</a>
+      <a data-url="http://yoursite.com/2018/05/01/网络（3）/" data-id="cjk4w502j0013qmqwxukij6oa" class="article-share-link">Teilen</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/网络/">网络</a></li></ul>
@@ -689,7 +730,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 15px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 20px;">effective c++</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 15px;">复习</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
+      <a href="/tags/HSI/" style="font-size: 10px;">HSI</a> <a href="/tags/LLVM/" style="font-size: 13.33px;">LLVM</a> <a href="/tags/effective-c/" style="font-size: 16.67px;">effective c++</a> <a href="/tags/false-sharing/" style="font-size: 10px;">false sharing</a> <a href="/tags/复习/" style="font-size: 13.33px;">复习</a> <a href="/tags/线程/" style="font-size: 13.33px;">线程</a> <a href="/tags/网络/" style="font-size: 20px;">网络</a>
     </div>
   </div>
 
